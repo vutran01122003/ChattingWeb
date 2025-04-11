@@ -15,24 +15,20 @@ function RegisterPage() {
         phone: "",
         password: "",
         confirmPassword: "",
-        terms: "",
+        terms: ""
     });
     const dropdownRef = useRef(null);
     const navigate = useNavigate();
 
     useEffect(() => {
         function handleClickOutside(event) {
-            if (
-                dropdownRef.current &&
-                !dropdownRef.current.contains(event.target)
-            ) {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
                 setIsDropdownOpen(false);
             }
         }
 
         document.addEventListener("mousedown", handleClickOutside);
-        return () =>
-            document.removeEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
     const validateForm = () => {
@@ -40,7 +36,7 @@ function RegisterPage() {
             phone: "",
             password: "",
             confirmPassword: "",
-            terms: "",
+            terms: ""
         };
 
         let isValid = true;
@@ -85,22 +81,16 @@ function RegisterPage() {
     return (
         <div className="flex flex-col items-center justify-center min-h-screen bg-blue-50">
             <div className="text-center mb-8">
-                <h1 className="text-4xl font-bold text-blue-600">Zalo</h1>
-                <p className="text-gray-600 mt-2">
-                    Đăng ký tài khoản Zalo để kết nối với ứng dụng Zalo Web
-                </p>
+                <h1 className="text-5xl font-bold text-blue-600 font-serif">Lochat</h1>
+                <p className="text-gray-600 mt-2">Đăng ký tài khoản Lochat để kết nối với ứng dụng Lochat Web</p>
             </div>
             <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
-                <h2 className="text-lg font-semibold text-gray-800 mb-4">
-                    Đăng ký tài khoản
-                </h2>
+                <h2 className="text-lg font-semibold text-gray-800 mb-4">Đăng ký tài khoản</h2>
                 <form onSubmit={handleRegister}>
                     <div className="mb-4">
                         <div
                             className={`flex items-center border ${
-                                errors.phone
-                                    ? "border-red-500"
-                                    : "border-gray-300"
+                                errors.phone ? "border-red-500" : "border-gray-300"
                             } rounded-lg px-3 py-2 bg-gray-50`}
                         >
                             {/* Country dropdown */}
@@ -108,17 +98,10 @@ function RegisterPage() {
                                 <button
                                     type="button"
                                     className="flex items-center bg-transparent text-gray-700 mr-2"
-                                    onClick={() =>
-                                        setIsDropdownOpen(!isDropdownOpen)
-                                    }
+                                    onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                                 >
-                                    <span className="mr-1">
-                                        {selectedCountry.code}
-                                    </span>
-                                    <svg
-                                        className="w-4 h-4 fill-current"
-                                        viewBox="0 0 20 20"
-                                    >
+                                    <span className="mr-1">{selectedCountry.code}</span>
+                                    <svg className="w-4 h-4 fill-current" viewBox="0 0 20 20">
                                         <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
                                     </svg>
                                 </button>
@@ -131,18 +114,11 @@ function RegisterPage() {
                                                     key={country.code}
                                                     className="px-3 py-2 hover:bg-blue-100 cursor-pointer"
                                                     onClick={() => {
-                                                        setSelectedCountry(
-                                                            country
-                                                        );
-                                                        setIsDropdownOpen(
-                                                            false
-                                                        );
+                                                        setSelectedCountry(country);
+                                                        setIsDropdownOpen(false);
                                                     }}
                                                 >
-                                                    <span className="font-medium">
-                                                        {country.code}
-                                                    </span>{" "}
-                                                    - {country.name}
+                                                    <span className="font-medium">{country.code}</span> - {country.name}
                                                 </li>
                                             ))}
                                         </ul>
@@ -157,19 +133,13 @@ function RegisterPage() {
                                 onChange={(e) => setPhoneNumber(e.target.value)}
                             />
                         </div>
-                        {errors.phone && (
-                            <p className="text-red-500 text-sm mt-1">
-                                {errors.phone}
-                            </p>
-                        )}
+                        {errors.phone && <p className="text-red-500 text-sm mt-1">{errors.phone}</p>}
                     </div>
 
                     <div className="mb-4">
                         <div
                             className={`flex items-center border ${
-                                errors.password
-                                    ? "border-red-500"
-                                    : "border-gray-300"
+                                errors.password ? "border-red-500" : "border-gray-300"
                             } rounded-lg px-3 py-2 bg-gray-50`}
                         >
                             <input
@@ -223,19 +193,13 @@ function RegisterPage() {
                                 )}
                             </button>
                         </div>
-                        {errors.password && (
-                            <p className="text-red-500 text-sm mt-1">
-                                {errors.password}
-                            </p>
-                        )}
+                        {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password}</p>}
                     </div>
 
                     <div className="mb-4">
                         <div
                             className={`flex items-center border ${
-                                errors.confirmPassword
-                                    ? "border-red-500"
-                                    : "border-gray-300"
+                                errors.confirmPassword ? "border-red-500" : "border-gray-300"
                             } rounded-lg px-3 py-2 bg-gray-50`}
                         >
                             <input
@@ -243,16 +207,12 @@ function RegisterPage() {
                                 placeholder="Nhập lại mật khẩu"
                                 className="flex-1 bg-transparent outline-none text-gray-700"
                                 value={confirmPassword}
-                                onChange={(e) =>
-                                    setConfirmPassword(e.target.value)
-                                }
+                                onChange={(e) => setConfirmPassword(e.target.value)}
                             />
                             <button
                                 type="button"
                                 className="text-gray-500 hover:text-blue-600"
-                                onClick={() =>
-                                    setShowConfirmPassword(!showConfirmPassword)
-                                }
+                                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                             >
                                 {showConfirmPassword ? (
                                     <svg
@@ -294,9 +254,7 @@ function RegisterPage() {
                             </button>
                         </div>
                         {errors.confirmPassword && (
-                            <p className="text-red-500 text-sm mt-1">
-                                {errors.confirmPassword}
-                            </p>
+                            <p className="text-red-500 text-sm mt-1">{errors.confirmPassword}</p>
                         )}
                     </div>
 
@@ -307,29 +265,17 @@ function RegisterPage() {
                                 id="terms"
                                 className="mt-1 mr-2"
                                 checked={acceptTerms}
-                                onChange={(e) =>
-                                    setAcceptTerms(e.target.checked)
-                                }
+                                onChange={(e) => setAcceptTerms(e.target.checked)}
                             />
-                            <label
-                                htmlFor="terms"
-                                className="text-gray-600 text-sm"
-                            >
+                            <label htmlFor="terms" className="text-gray-600 text-sm">
                                 Tôi đồng ý với{" "}
-                                <a
-                                    href="#"
-                                    className="text-blue-600 hover:underline"
-                                >
+                                <a href="#" className="text-blue-600 hover:underline">
                                     Điều khoản sử dụng
                                 </a>{" "}
                                 của Zalo
                             </label>
                         </div>
-                        {errors.terms && (
-                            <p className="text-red-500 text-sm mt-1">
-                                {errors.terms}
-                            </p>
-                        )}
+                        {errors.terms && <p className="text-red-500 text-sm mt-1">{errors.terms}</p>}
                     </div>
 
                     <button
@@ -343,10 +289,7 @@ function RegisterPage() {
                 <div className="text-center mt-4">
                     <p className="text-gray-600 text-sm">
                         Đã có tài khoản?{" "}
-                        <Link
-                            to="/login"
-                            className="text-blue-600 hover:underline"
-                        >
+                        <Link to="/login" className="text-blue-600 hover:underline">
                             Đăng nhập
                         </Link>
                     </p>
