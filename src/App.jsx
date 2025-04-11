@@ -3,17 +3,18 @@ import HomePage from "./pages/Home";
 import LoginPage from "./pages/Login";
 import RegisterPage from "./pages/Register";
 import NotfoundPage from "./pages/Notfound";
+import Layout from "./components/layout/Layout";
 
 function App() {
     return (
-        <div>
-            <Routes>
-                <Route path="/" element={<HomePage />} />
-                <Route path="/login" element={<LoginPage />} />
-                <Route path="/register" element={<RegisterPage />} />
+        <Routes>
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
+            <Route path="/" element={<Layout />}>
+                <Route index element={<HomePage />} />
                 <Route path="*" element={<NotfoundPage />} />
-            </Routes>
-        </div>
+            </Route>
+        </Routes>
     );
 }
 
