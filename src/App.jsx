@@ -4,6 +4,8 @@ import LoginPage from "./pages/Login";
 import RegisterPage from "./pages/Register";
 import NotfoundPage from "./pages/Notfound";
 import Layout from "./components/layout/Layout";
+import ForgotPassword from "./pages/ForgotPassword";
+import ForgotPasswordConfirmation from "./pages/ForgotPasswordConfirmation";
 
 function App() {
     return (
