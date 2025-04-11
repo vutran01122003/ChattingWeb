@@ -10,6 +10,8 @@ function App() {
         <Routes>
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/forgot-password-confirmation" element={<ForgotPasswordConfirmation />} />
             <Route path="/" element={<Layout />}>
                 <Route index element={<HomePage />} />
                 <Route path="*" element={<NotfoundPage />} />
