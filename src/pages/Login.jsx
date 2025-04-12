@@ -1,7 +1,10 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { useDispatch } from "react-redux";
 import { Link } from "react-router-dom";
+import { login } from "../redux/slices/authSlice";
 
 const LoginPage = () => {
+    const dispatch = useDispatch();
     const [phone, setPhone] = useState("");
     const [password, setPassword] = useState("");
 
@@ -16,8 +19,13 @@ const LoginPage = () => {
 
     const handleSubmit = (event) => {
         event.preventDefault();
-        console.log("Số điện thoại: ", phone);
-        console.log("Mật khẩu: ", password);
+
+        dispatch(
+            login({
+                phone,
+                password
+            })
+        );
     };
 
     const isFormValid = phone && password;
@@ -83,7 +91,7 @@ const LoginPage = () => {
                     </div>
 
                     <div className="text-blue-600 mt-10 hover:underline cursor-pointer mt-2 font-medium">
-                        Đăng nhập qua mã QR
+                        <Link to="/qr-login">Đăng nhập qua mã QR</Link>
                     </div>
                 </div>
 

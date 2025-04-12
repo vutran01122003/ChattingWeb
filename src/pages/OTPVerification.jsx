@@ -1,13 +1,21 @@
 import React, { useState, useRef, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router";
+import { useLocation } from "react-router-dom";
+import { verifyOtp, verifyForgotPasswordOtp } from "../redux/slices/authSlice";
+import { authSelector } from "../redux/selector";
 
 function OTPVerificationPage() {
+    const dispatch = useDispatch();
+    const location = useLocation();
+    const prevPage = location?.state?.prevPage;
+    const auth = useSelector(authSelector);
     const [otp, setOtp] = useState(["", "", "", "", "", ""]);
     const [timer, setTimer] = useState(60);
     const [canResend, setCanResend] = useState(false);
     const inputRefs = useRef([]);
     const navigate = useNavigate();
-
+    console.log(prevPage);
     useEffect(() => {
         if (inputRefs.current[0]) {
             inputRefs.current[0].focus();
@@ -35,8 +43,6 @@ function OTPVerificationPage() {
 
         setTimer(60);
         setCanResend(false);
-
-        console.log("Requesting new OTP code");
     };
 
     const handleChange = (index, value) => {
@@ -80,29 +86,48 @@ function OTPVerificationPage() {
     };
 
     const handleConfirmation = () => {
-        navigate("/input-name");
+        if (!otp.some((number) => number === "")) {
+            if (prevPage === "register") {
+                dispatch(
+                    verifyOtp({
+                        otp: otp.join(""),
+                        token: auth.tokens?.otpToken
+                    })
+                );
+
+                navigate("/update-info");
+            }
+
+            if (prevPage === "forgot-password") {
+                dispatch(
+                    verifyForgotPasswordOtp({
+                        otp: otp.join(""),
+                        token: auth.tokens?.otpToken
+                    })
+                );
+            }
+        }
     };
+
+    useEffect(() => {
+        const verifyFPStatus = auth?.verifyForgotPasswordStatus;
+        if (verifyFPStatus && verifyFPStatus.result) navigate("/forgot-password-confirmation");
+    }, [auth]);
 
     return (
         <div className="flex flex-col items-center justify-center min-h-screen bg-blue-50">
             <div className="text-center mb-8">
-                <h1 className="text-4xl font-bold text-blue-600">Zalo</h1>
+                <h1 className="text-5xl font-bold text-blue-600 font-serif">Lochat</h1>
                 <p className="text-gray-600 mt-2">Xác thực tài khoản của bạn</p>
             </div>
             <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
-                <h2 className="text-lg font-semibold text-gray-800 mb-2">
-                    Nhập mã xác thực
-                </h2>
+                <h2 className="text-lg font-semibold text-gray-800 mb-2">Nhập mã xác thực</h2>
                 <p className="text-gray-600 text-sm mb-6">
-                    Chúng tôi đã gửi mã xác thực đến số điện thoại của bạn. Vui
-                    lòng nhập mã 6 chữ số vào ô bên dưới.
+                    Chúng tôi đã gửi mã xác thực đến số điện thoại của bạn. Vui lòng nhập mã 6 chữ số vào ô bên dưới.
                 </p>
 
                 {/* OTP Input Group */}
-                <div
-                    className="flex justify-between mb-6"
-                    onPaste={handlePaste}
-                >
+                <div className="flex justify-between mb-6" onPaste={handlePaste}>
                     {otp.map((digit, index) => (
                         <input
                             key={index}
@@ -110,9 +135,7 @@ function OTPVerificationPage() {
                             type="text"
                             maxLength={1}
                             value={digit}
-                            onChange={(e) =>
-                                handleChange(index, e.target.value)
-                            }
+                            onChange={(e) => handleChange(index, e.target.value)}
                             onKeyDown={(e) => handleKeyDown(index, e)}
                             className="w-12 h-12 text-center text-xl font-bold border border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none"
                         />
@@ -145,10 +168,7 @@ function OTPVerificationPage() {
 
                 <div className="text-center mt-2">
                     <p className="text-gray-600 text-sm">
-                        <Link
-                            to="/register"
-                            className="text-blue-600 hover:underline"
-                        >
+                        <Link to="/register" className="text-blue-600 hover:underline">
                             Thay đổi số điện thoại
                         </Link>
                     </p>

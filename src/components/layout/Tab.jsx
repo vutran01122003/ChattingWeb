@@ -9,21 +9,16 @@ import { SlLogout } from "react-icons/sl";
 import { Link } from "react-router";
 import Avatar from "../user/Avatar";
 import Profile from "../user/Profile";
+import { useDispatch, useSelector } from "react-redux";
+import { logout } from "../../redux/slices/authSlice";
+import { authSelector } from "../../redux/selector";
 
 function Tab() {
+    const dispatch = useDispatch();
+    const { user } = useSelector(authSelector);
     const [currentFeatureId, setCurrentFeatureId] = useState(1);
     const [visibleSettingModal, setVisibleSettingModal] = useState(false);
     const [visibleProfile, setVisibleProfile] = useState(false);
-
-    const hideSettingModal = () => {
-        setVisibleSettingModal(false);
-        setCurrentFeatureId(null);
-    };
-
-    const hideProfileModal = () => {
-        setVisibleProfile(false);
-    };
-
     const features = [
         {
             id: 1,
@@ -67,14 +62,27 @@ function Tab() {
         }
     ];
 
+    const hideSettingModal = () => {
+        setVisibleSettingModal(false);
+        setCurrentFeatureId(null);
+    };
+
+    const hideProfileModal = () => {
+        setVisibleProfile(false);
+    };
+
+    const onLogout = () => {
+        dispatch(logout());
+    };
+
     return (
         <Fragment>
-            {visibleProfile && <Profile hideProfileModal={hideProfileModal} />}
+            {visibleProfile && <Profile hideProfileModal={hideProfileModal} user={user} />}
 
             <div className="bg-blue-700 h-full w-16 flex flex-col justify-between pt-8 pb-8">
                 <div className="flex flex-col items-center gap-8 text-white">
                     <button onClick={() => setVisibleProfile(true)}>
-                        <Avatar />
+                        <Avatar src={user?.avatar_url} />
                     </button>
                     {features.map((feature) => {
                         if ([1, 2].includes(feature.id))
@@ -135,6 +143,7 @@ function Tab() {
                                                         onClick={() => {
                                                             hideSettingModal();
                                                             if (option.id === 1) setVisibleProfile(true);
+                                                            if (option.id === 3) onLogout();
                                                         }}
                                                     >
                                                         <span>{option.icon}</span>

@@ -1,8 +1,11 @@
 import React, { useState, useRef, useEffect } from "react";
 import countries from "../core/country_code";
 import { useNavigate, Link } from "react-router";
+import { useDispatch } from "react-redux";
+import { signUp } from "../redux/slices/authSlice";
 
 function RegisterPage() {
+    const dispatch = useDispatch();
     const [selectedCountry, setSelectedCountry] = useState(countries[0]);
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [phoneNumber, setPhoneNumber] = useState("");
@@ -74,7 +77,13 @@ function RegisterPage() {
     const handleRegister = (e) => {
         e.preventDefault();
         if (validateForm()) {
-            navigate("/otp");
+            dispatch(
+                signUp({
+                    phone: phoneNumber,
+                    password
+                })
+            );
+            navigate("/otp", { state: { prevPage: "register" } });
         }
     };
 

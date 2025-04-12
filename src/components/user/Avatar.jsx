@@ -10,7 +10,6 @@ const Avatar = ({ src, alt = "Avatar", size = 44 }) => {
     };
 
     const handleError = () => {
-        console.log("ok");
         setImgSrc(defaultAvatar);
     };
 
