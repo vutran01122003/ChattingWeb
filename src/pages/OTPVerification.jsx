@@ -4,6 +4,7 @@ import { Link, useNavigate } from "react-router";
 import { useLocation } from "react-router-dom";
 import { verifyOtp, verifyForgotPasswordOtp } from "../redux/slices/authSlice";
 import { authSelector } from "../redux/selector";
+import { getUserCredentials } from "../utils";
 
 function OTPVerificationPage() {
     const dispatch = useDispatch();
@@ -94,8 +95,6 @@ function OTPVerificationPage() {
                         token: auth.tokens?.otpToken
                     })
                 );
-
-                navigate("/update-info");
             }
 
             if (prevPage === "forgot-password") {
@@ -111,7 +110,9 @@ function OTPVerificationPage() {
 
     useEffect(() => {
         const verifyFPStatus = auth?.verifyForgotPasswordStatus;
+        const { accessToken, refreshToken } = auth.tokens;
         if (verifyFPStatus && verifyFPStatus.result) navigate("/forgot-password-confirmation");
+        if (accessToken && refreshToken) navigate("/update-info");
     }, [auth]);
 
     return (
@@ -168,7 +169,10 @@ function OTPVerificationPage() {
 
                 <div className="text-center mt-2">
                     <p className="text-gray-600 text-sm">
-                        <Link to="/register" className="text-blue-600 hover:underline">
+                        <Link
+                            to={prevPage === "forgot-password" ? "/forgot-password" : "/register"}
+                            className="text-blue-600 hover:underline"
+                        >
                             Thay đổi số điện thoại
                         </Link>
                     </p>

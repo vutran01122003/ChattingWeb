@@ -1,7 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { getDataApi, postDataApi } from "../../utils/fetchData";
 import { getUserCredentials, removeUserCredentials, toBase64 } from "../../utils";
-const { clientId } = getUserCredentials();
 
 const initialState = {
     user: null,
@@ -31,6 +30,8 @@ export const verifyOtp = createAsyncThunk("verifyOtp", async ({ otp, token }) =>
 });
 
 export const editProfile = createAsyncThunk("editProfile", async ({ fullName, dateOfBirth, gender, file, setFile }) => {
+    const { clientId } = getUserCredentials();
+
     const formData = new FormData();
     formData.append("fullName", fullName);
     formData.append("dateOfBirth", dateOfBirth);
@@ -47,6 +48,8 @@ export const editProfile = createAsyncThunk("editProfile", async ({ fullName, da
 });
 
 export const updateUser = createAsyncThunk("updateUser", async ({ fullName, dateOfBirth, gender }) => {
+    const { clientId } = getUserCredentials();
+
     const res = await postDataApi(
         "/user/update-info",
         {
@@ -63,6 +66,8 @@ export const updateUser = createAsyncThunk("updateUser", async ({ fullName, date
 });
 
 export const createPassword = createAsyncThunk("createPassword", async ({ temporaryPassword }) => {
+    const { clientId } = getUserCredentials();
+
     const res = await postDataApi(
         "/user/create-password",
         {
@@ -77,6 +82,8 @@ export const createPassword = createAsyncThunk("createPassword", async ({ tempor
 });
 
 export const login = createAsyncThunk("login", async ({ phone, password }) => {
+    const { clientId } = getUserCredentials();
+
     const res = await postDataApi(
         "/auth/login",
         {
@@ -92,6 +99,8 @@ export const login = createAsyncThunk("login", async ({ phone, password }) => {
 });
 
 export const getUserDataByTokensAndClientId = createAsyncThunk("getUserDataByToken", async ({ setIsLoading }) => {
+    const { clientId } = getUserCredentials();
+
     return new Promise((resolve, reject) => {
         getDataApi("/auth/user-info", null, {
             "x-client-id": clientId
@@ -107,6 +116,8 @@ export const getUserDataByTokensAndClientId = createAsyncThunk("getUserDataByTok
 });
 
 export const logout = createAsyncThunk("logout", async () => {
+    const { clientId } = getUserCredentials();
+
     return new Promise((resolve, reject) => {
         postDataApi("/auth/logout", null, {
             "x-client-id": clientId
@@ -136,6 +147,15 @@ export const verifyForgotPasswordOtp = createAsyncThunk("verifyForgotPasswordOtp
     return res.data;
 });
 
+export const setPassword = createAsyncThunk("setPassword", async ({ newPassword, phone }) => {
+    const res = await postDataApi("/user/reset-password", {
+        newPassword,
+        phone
+    });
+
+    return res.data;
+});
+
 const authSlice = createSlice({
     name: "auth",
     initialState,
@@ -156,7 +176,7 @@ const authSlice = createSlice({
                 localStorage.setItem("clientId", user._id);
             })
             .addCase(updateUser.fulfilled, (state, action) => {
-                console.log(action.payload.data);
+                state.user = action.payload.metadata;
             })
             .addCase(getUserDataByTokensAndClientId.fulfilled, (state, action) => {
                 state.user = action.payload.metadata?.user;
@@ -184,6 +204,9 @@ const authSlice = createSlice({
                     phone,
                     result
                 };
+            })
+            .addCase(setPassword.fulfilled, (state, action) => {
+                delete state.verifyForgotPasswordStatus;
             });
     }
 });

@@ -1,17 +1,17 @@
 import React, { useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { useLocation } from "react-router-dom";
+import { authSelector } from "../redux/selector";
+import { setPassword } from "../redux/slices/authSlice";
 
 const ForgotPasswordConfirmation = () => {
-    const location = useLocation();
-    const phone = location.state?.phone;
+    const dispatch = useDispatch();
+    const auth = useSelector(authSelector);
+    const verifyFPStatus = auth?.verifyForgotPasswordStatus;
 
     const [activationCode, setActivationCode] = useState("");
     const [newPassword, setNewPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
-
-    const handleActivationCodeChange = (event) => {
-        setActivationCode(event.target.value);
-    };
 
     const handleNewPasswordChange = (event) => {
         setNewPassword(event.target.value);
@@ -21,13 +21,22 @@ const ForgotPasswordConfirmation = () => {
         setConfirmPassword(event.target.value);
     };
 
-    const isFormValid = activationCode && newPassword && confirmPassword;
+    const isFormValid = newPassword && confirmPassword && newPassword === confirmPassword;
 
     const handleSubmit = (event) => {
         event.preventDefault();
-        console.log("Activation Code: ", activationCode);
-        console.log("New Password: ", newPassword);
-        console.log("Confirm Password: ", confirmPassword);
+        if (newPassword !== confirmPassword) {
+            alert("Mật khẩu không trùng nhau!");
+        } else {
+            dispatch(
+                setPassword({
+                    phone: verifyFPStatus?.phone,
+                    newPassword
+                })
+            );
+
+            window.location.href = "/";
+        }
     };
 
     return (

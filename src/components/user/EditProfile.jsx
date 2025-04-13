@@ -5,7 +5,7 @@ import { editProfile } from "../../redux/slices/authSlice";
 function EditProfile({ user, file, setFile, onToggleVisibleEditModal }) {
     const dispatch = useDispatch();
     const [fullName, setFullName] = useState(user?.full_name || "");
-    const [dateOfBirth, setDateOfBirth] = useState(user?.date_of_birth.split("T")[0] || "");
+    const [dateOfBirth, setDateOfBirth] = useState(user?.date_of_birth?.split("T")[0] || "");
     const [gender, setGender] = useState(user?.gender);
 
     const onEditProfile = () => {
