@@ -9,7 +9,9 @@ const publicEndpoints = [
     "/user/verify-reset-password",
     "/user/reset-password",
     "/auth/generateQRSession",
-    "/auth/checkQRSession"
+    "/auth/checkQRSession",
+    "/user/getAllUser",
+    "user/getUserBySearch",
 ];
 
 const instance = axios.create({

@@ -9,7 +9,8 @@ const initialState = {
         accessToken: null,
         otpToken: null
     },
-    temporaryPassword: null
+    temporaryPassword: null,
+    allUsers: [] 
 };
 
 export const signUp = createAsyncThunk("signUp", async ({ phone, password }) => {
@@ -156,6 +157,18 @@ export const setPassword = createAsyncThunk("setPassword", async ({ newPassword,
     return res.data;
 });
 
+export const getAllUser = createAsyncThunk("getAllUser", async () => {
+    const res = await getDataApi("/user/getAllUser"); 
+    return res.data;
+});
+
+export const getUserBySearch = createAsyncThunk("getUserBySearch", async ({ search }) => {
+    const url = `/user/getUserBySearch/${search}`;  
+    const res = await getDataApi(url); 
+    return res.data;
+});
+
+
 const authSlice = createSlice({
     name: "auth",
     initialState,
@@ -207,6 +220,12 @@ const authSlice = createSlice({
             })
             .addCase(setPassword.fulfilled, (state, action) => {
                 delete state.verifyForgotPasswordStatus;
+            })
+            .addCase(getAllUser.fulfilled, (state, action) => {
+                state.allUsers = action.payload?.metadata;
+            })
+            .addCase(getUserBySearch.fulfilled, (state, action) => {
+                state.allUsers = action.payload?.metadata;
             });
     }
 });
