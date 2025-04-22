@@ -1,10 +1,10 @@
 import { Fragment, useState } from "react";
-import Tab from "./Tab";
-import SideBar from "./Sidebar";
 import { Outlet } from "react-router";
 import { useSelector } from "react-redux";
-import { callSelector, peerSelector, socketSelector } from "../../redux/selector";
+import Tab from "./Tab";
+import SideBar from "./Sidebar";
 import CallModal from "../message/CallModal";
+import { callSelector, peerSelector, socketSelector } from "../../redux/selector";
 
 function Layout({ auth }) {
     const peer = useSelector(peerSelector);
@@ -28,13 +28,9 @@ function Layout({ auth }) {
                 <Tab />
                 <SideBar auth={auth} setSelectedUser={handleUserSelection} selectedUserId={selectedUserId} />
                 <main className="flex-1">
-                    {selectedUser ? (
-                        <div>
-                            <Outlet context={selectedUser} />
-                        </div>
-                    ) : (
-                        <div>Chọn người dùng để bắt đầu trò chuyện</div>
-                    )}
+                    <div>
+                        <Outlet context={selectedUser} />
+                    </div>
                 </main>
             </div>
         </Fragment>

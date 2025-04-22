@@ -7,13 +7,15 @@ import socketReducer from "./slices/socketSlice";
 import peerReducer from "./slices/peerSlice";
 import callReducer from "./slices/callSlice";
 
+import chatReducer from "./slices/chatSlice";
 const rootReducer = combineReducers({
     count: countReducer,
     product: productReducer,
     auth: authReducer,
     socket: socketReducer,
     peer: peerReducer,
-    call: callReducer
+    call: callReducer,
+    chat: chatReducer
 });
 
 const store = configureStore({

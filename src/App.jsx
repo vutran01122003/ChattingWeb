@@ -15,6 +15,8 @@ import { authSelector } from "./redux/selector";
 import QrLogin from "./pages/QrLogin";
 import SocketClient from "./SocketClient";
 import PeerClient from "./PeerClient";
+import ChatPage from "./pages/ChatPage";
+import ProtectedChatRoute from "./pages/ProtectedChatRoute";
 
 function App() {
     const dispatch = useDispatch();
@@ -46,6 +48,7 @@ function App() {
                 <Route path="/update-info" element={<UpdateUserInfo />} />
                 <Route path="/" element={auth.user ? <Layout auth={auth} /> : <LoginPage />}>
                     <Route index element={<HomePage />} />
+                    <Route path="/chat/:otherId" element={<ChatPage />} />
                     <Route path="*" element={<NotfoundPage />} />
                 </Route>
             </Routes>

@@ -1,7 +1,11 @@
 import { useDispatch, useSelector } from "react-redux";
 import { getUserBySearch, getAllUser } from "../../redux/slices/authSlice";
 import { useEffect, useState } from "react";
+import { MdOutlinePersonAddAlt } from "react-icons/md";
+import { MdOutlineGroupAdd } from "react-icons/md";
+import { useNavigate } from "react-router-dom";
 
+import { fetchConversations } from "../../redux/thunks/chatThunks";
 function SideBar({ auth, setSelectedUser, selectedUserId }) {
     const [activeTab, setActiveTab] = useState("all");
     const [searchTerm, setSearchTerm] = useState("");
@@ -9,7 +13,14 @@ function SideBar({ auth, setSelectedUser, selectedUserId }) {
 
     const allUsers = useSelector((state) => state.auth.allUsers);
     const searchResults = useSelector((state) => state.auth.searchResults);
+    const [search, setSearch] = useState("");
+    const navigate = useNavigate();
 
+    const { friendConversations, strangerConversations } = useSelector((state) => state.chat);
+    const conversations = [...friendConversations, ...strangerConversations];
+    useEffect(() => {
+        dispatch(fetchConversations());
+    }, []);
     useEffect(() => {
         dispatch(getAllUser());
     }, [dispatch]);
@@ -30,7 +41,8 @@ function SideBar({ auth, setSelectedUser, selectedUserId }) {
             : allUsers;
 
     return (
-        <div className="w-[300px] flex flex-col h-screen bg-white">
+        <div className="w-xs h-screen flex flex-col border-r border-gray-200">
+            {/* Thanh tìm kiếm + nút */}
             <div className="flex gap-1 items-center p-3">
                 <input
                     type="text"
@@ -62,7 +74,7 @@ function SideBar({ auth, setSelectedUser, selectedUserId }) {
                 </button>
             </div>
 
-            <div className="overflow-y-auto flex-1">
+            {/* <div className="overflow-y-auto flex-1">
                 {filteredUsers?.map((user) => {
                     if (auth?.user?._id === user._id) return null;
 
@@ -91,6 +103,54 @@ function SideBar({ auth, setSelectedUser, selectedUserId }) {
                         </div>
                     );
                 })}
+                <abbr title="Thêm bạn">
+                    <button className="w-9 h-9 flex justify-center items-center hover:bg-gray-200 rounded-sm cursor-pointer">
+                        <MdOutlinePersonAddAlt size={18} />
+                    </button>
+                </abbr>
+                <abbr title="Tạo nhóm chat">
+                    <button className="w-9 h-9 flex justify-center items-center hover:bg-gray-200 rounded-sm cursor-pointer">
+                        <MdOutlineGroupAdd size={18} />
+                    </button>
+                </abbr>
+            </div> */}
+
+            {/* Vùng danh sách có scroll */}
+            <div className="flex-1 overflow-y-auto">
+                {conversations.map(
+                    (chat) =>
+                        chat.last_message !== null &&
+                        chat.conversation_type === "friend" && (
+                            <div
+                                key={chat.conversation_id}
+                                className="flex gap-3 px-3 py-2 hover:bg-gray-100 cursor-pointer"
+                                onClick={() => navigate(`/chat/${chat.other_user._id}`)}
+                            >
+                                <img
+                                    src={chat.other_user.avatar_url}
+                                    alt={chat.other_user.full_name}
+                                    className="w-10 h-10 rounded-full object-cover"
+                                />
+                                <div className="flex-1">
+                                    <div className="flex justify-between text-sm">
+                                        <span className="font-semibold">{chat.other_user.full_name}</span>
+                                        <span className="text-gray-400">
+                                            {new Date(chat.last_message_time).toLocaleTimeString([], {
+                                                hour: "2-digit",
+                                                minute: "2-digit"
+                                            })}
+                                        </span>
+                                    </div>
+                                    <div className="text-gray-500 text-sm truncate">
+                                        {chat.last_message?.content !== ""
+                                            ? chat.last_message?.content || "Không có tin nhắn"
+                                            : chat.last_message?.attachments[chat.last_message?.attachments.length - 1]
+                                                  .file_name}
+                                    </div>
+                                </div>
+                            </div>
+                        )
+                )}
             </div>
         </div>
     );
