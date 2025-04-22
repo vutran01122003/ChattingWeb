@@ -1,4 +1,7 @@
 export const countSelector = (state) => state.count;
+export const peerSelector = (state) => state.peer;
+export const callSelector = (state) => state.call;
+export const socketSelector = (state) => state.socket.socket;
 export const productSelector = (state) => state.product;
 export const countryCodeSelector = (state) => state.countryCode.data;
 export const selectedCountrySelector = (state) => state.countryCode.isSlected;
