@@ -3,11 +3,12 @@ import { configureStore, combineReducers } from "@reduxjs/toolkit";
 import countReducer from "./slices/countSlice";
 import productReducer from "./slices/productSlice";
 import authReducer from "./slices/authSlice";
-
+import chatReducer from './slices/chatSlice'
 const rootReducer = combineReducers({
     count: countReducer,
     product: productReducer,
-    auth: authReducer
+    auth: authReducer,
+    chat: chatReducer
 });
 
 const store = configureStore({
