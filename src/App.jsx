@@ -13,6 +13,9 @@ import ForgotPasswordConfirmation from "./pages/ForgotPasswordConfirmation";
 import { getUserDataByTokensAndClientId } from "./redux/slices/authSlice";
 import { authSelector } from "./redux/selector";
 import QrLogin from "./pages/QrLogin";
+import FriendRequestsScreen from "./pages/FriendRequestsScreen";
+import ListFriendScreen  from "./pages/ListFriendScreen";
+
 
 function App() {
     const dispatch = useDispatch();
@@ -36,8 +39,12 @@ function App() {
             <Route path="/update-info" element={<UpdateUserInfo />} />
             <Route path="/" element={auth.user ? <Layout /> : <LoginPage />}>
                 <Route index element={<HomePage />} />
+                <Route path="friend-request" element={ <FriendRequestsScreen /> } />
+                <Route path="list-friend" element={ <ListFriendScreen /> } />
                 <Route path="*" element={<NotfoundPage />} />
+                
             </Route>
+            
         </Routes>
     );
 }
