@@ -37,3 +37,25 @@ export const toBase64 = (file) =>
         reader.onload = () => resolve(reader.result);
         reader.onerror = reject;
     });
+
+
+   export const formatDateHeader = (dateString) => {
+        const today = new Date();
+        const date = new Date(dateString);
+
+        const isToday = today.toDateString() === date.toDateString();
+
+        const yesterday = new Date();
+        yesterday.setDate(today.getDate() - 1);
+        const isYesterday = yesterday.toDateString() === date.toDateString();
+
+        if (isToday) return "Hôm nay";
+        if (isYesterday) return "Hôm qua";
+
+        return date.toLocaleDateString('vi-VN', {
+            weekday: 'short',
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric'
+        });
+    };

@@ -48,7 +48,7 @@ function App() {
                 <Route path="/update-info" element={<UpdateUserInfo />} />
                 <Route path="/" element={auth.user ? <Layout auth={auth} /> : <LoginPage />}>
                     <Route index element={<HomePage />} />
-                    <Route path="/chat/:otherId" element={<ChatPage />} />
+                    <Route path="/chat/:conversationId" element={<ChatPage />} />
                     <Route path="*" element={<NotfoundPage />} />
                 </Route>
             </Routes>

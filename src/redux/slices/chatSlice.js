@@ -1,8 +1,8 @@
-import {createSlice} from '@reduxjs/toolkit';
+import { createSlice } from '@reduxjs/toolkit';
 
 import {
   fetchConversations,
-  createOrGetConversation,
+  getConversation,
   getConversationMessages,
   sendMessage,
   sendMessageWithFiles,
@@ -10,11 +10,13 @@ import {
   deleteMessage,
   markAsReadMessage,
   forwardMessage,
+  addReaction
 } from '../thunks/chatThunks';
 
 const initialState = {
   friendConversations: [],
   strangerConversations: [],
+  groupConversations: [],
   currentConversation: null,
 
   messages: [],
@@ -79,7 +81,7 @@ const chatSlice = createSlice({
       updateConversationList(state.strangerConversations);
     },
     updateMessageStatus: (state, action) => {
-      const {messageId, updates} = action.payload;
+      const { messageId, updates } = action.payload;
       const messageIndex = state.messages.findIndex(
         msg => msg._id === messageId,
       );
@@ -97,10 +99,10 @@ const chatSlice = createSlice({
       .addCase(fetchConversations.fulfilled, (state, action) => {
         state.friendConversations = action.payload.friends;
         state.strangerConversations = action.payload.strangers;
+        state.groupConversations = action.payload.groups;
       })
 
-      .addCase(createOrGetConversation.fulfilled, (state, action) => {
-
+      .addCase(getConversation.fulfilled, (state, action) => {
         state.currentConversation = action.payload;
 
         const newConv = action.payload;
@@ -112,13 +114,21 @@ const chatSlice = createSlice({
           ) {
             state.friendConversations.unshift(newConv);
           }
-        } else {
+        } else if (newConv.conversation_type === 'stranger') {
           if (
             !state.strangerConversations.some(
               c => c.conversation_id === newConv.conversation_id,
             )
           ) {
             state.strangerConversations.unshift(newConv);
+          }
+        } else {
+          if (
+            !state.groupConversations.some(
+              c => c.conversation_id === newConv.conversation_id,
+            )
+          ) {
+            state.groupConversations.unshift(newConv);
           }
         }
       })
@@ -313,6 +323,27 @@ const chatSlice = createSlice({
 
         updateConversation(state.friendConversations);
         updateConversation(state.strangerConversations);
+      })
+      .addCase(addReaction.fulfilled, (state, action) => {
+        const { _id, reactions } = action.payload;
+        const messageIndex = state.messages.findIndex(
+          msg => msg._id === _id,
+        );
+
+        if (messageIndex !== -1) {
+          const existingReactions = state.messages[messageIndex].reactions || [];
+          const reactionIndex = existingReactions.findIndex( r => 
+            r.user === reactions.user,
+          );
+
+          if (reactionIndex !== -1) {
+            existingReactions[reactionIndex].emoji = reactions.emoji;
+          } else {
+            existingReactions.push(reactions);
+          }
+
+          state.messages[messageIndex].reactions = existingReactions;
+        }
       });
   },
 });

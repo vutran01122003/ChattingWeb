@@ -23,7 +23,6 @@ function SocketClient({ auth }) {
             });
 
             socket.on("user_online_list", (data) => {
-                console.log(data);
                 dispatch(getUsersOnline(data));
             });
         }

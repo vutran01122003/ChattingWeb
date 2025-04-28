@@ -1,26 +1,42 @@
 import { useDispatch, useSelector } from "react-redux";
 import { getUserBySearch, getAllUser } from "../../redux/slices/authSlice";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { MdOutlinePersonAddAlt } from "react-icons/md";
 import { MdOutlineGroupAdd } from "react-icons/md";
 import { useNavigate } from "react-router-dom";
 
 import { fetchConversations } from "../../redux/thunks/chatThunks";
+import { socketSelector, authSelector } from "../../redux/selector";
 function SideBar({ auth, setSelectedUser, selectedUserId }) {
     const [activeTab, setActiveTab] = useState("all");
     const [searchTerm, setSearchTerm] = useState("");
     const dispatch = useDispatch();
-
+    const socket = useSelector(socketSelector);
+    const {user} = useSelector(authSelector);
     const allUsers = useSelector((state) => state.auth.allUsers);
     const searchResults = useSelector((state) => state.auth.searchResults);
     const [search, setSearch] = useState("");
     const navigate = useNavigate();
 
-    const { friendConversations, strangerConversations } = useSelector((state) => state.chat);
-    const conversations = [...friendConversations, ...strangerConversations];
+    const { friendConversations, strangerConversations, groupConversations } = useSelector((state) => state.chat);
+    const conversations = useMemo(() => {
+        return [...friendConversations, ...strangerConversations, ...groupConversations];
+    }, [friendConversations, strangerConversations, groupConversations]);
     useEffect(() => {
         dispatch(fetchConversations());
     }, []);
+    useEffect(() => {
+        if (!socket) return;
+
+        socket.on("conversation_updated", (data) => {
+            dispatch(fetchConversations());
+        });
+
+        return () => {
+            socket.off("conversation_updated");
+        };
+    }, [socket, dispatch]);
+
     useEffect(() => {
         dispatch(getAllUser());
     }, [dispatch]);
@@ -37,8 +53,21 @@ function SideBar({ auth, setSelectedUser, selectedUserId }) {
         activeTab === "unread"
             ? searchResults?.filter((user) => user.unread)
             : searchResults?.length > 0
-            ? searchResults
-            : allUsers;
+                ? searchResults
+                : allUsers;
+
+    const LastMessageCF = ({ chat }) => {
+        if (chat.last_message.deleted_by.includes(user._id)) {
+            return "Tin nhắn đã bị xóa"
+        } else if (chat.last_message.is_revoked) {
+            return "Tin nhắn đã được thu hồi"
+        } else {
+            return chat.last_message?.content !== ""
+                ? chat.last_message?.content || "Không có tin nhắn"
+                : chat.last_message?.attachments[chat.last_message?.attachments.length - 1]
+                    .file_name
+        }
+    }
 
     return (
         <div className="w-xs h-screen flex flex-col border-r border-gray-200">
@@ -56,19 +85,17 @@ function SideBar({ auth, setSelectedUser, selectedUserId }) {
             <div className="flex items-center px-3 text-sm">
                 <button
                     onClick={() => setActiveTab("all")}
-                    className={`py-2 mr-4 ${
-                        activeTab === "all" ? "text-blue-600 font-semibold border-b-2 border-blue-600" : "text-gray-600"
-                    }`}
+                    className={`py-2 mr-4 ${activeTab === "all" ? "text-blue-600 font-semibold border-b-2 border-blue-600" : "text-gray-600"
+                        }`}
                 >
                     Tất cả
                 </button>
                 <button
                     onClick={() => setActiveTab("unread")}
-                    className={`py-2 mr-4 ${
-                        activeTab === "unread"
-                            ? "text-blue-600 font-semibold border-b-2 border-blue-600"
-                            : "text-gray-600"
-                    }`}
+                    className={`py-2 mr-4 ${activeTab === "unread"
+                        ? "text-blue-600 font-semibold border-b-2 border-blue-600"
+                        : "text-gray-600"
+                        }`}
                 >
                     Chưa đọc
                 </button>
@@ -114,42 +141,86 @@ function SideBar({ auth, setSelectedUser, selectedUserId }) {
                     </button>
                 </abbr>
             </div> */}
-
+            {
+                conversations.map(chat => {
+                    console.log(chat);
+                })
+            }
             {/* Vùng danh sách có scroll */}
             <div className="flex-1 overflow-y-auto">
                 {conversations.map(
-                    (chat) =>
-                        chat.last_message !== null &&
-                        chat.conversation_type === "friend" && (
-                            <div
-                                key={chat.conversation_id}
-                                className="flex gap-3 px-3 py-2 hover:bg-gray-100 cursor-pointer"
-                                onClick={() => navigate(`/chat/${chat.other_user._id}`)}
-                            >
-                                <img
-                                    src={chat.other_user.avatar_url}
-                                    alt={chat.other_user.full_name}
-                                    className="w-10 h-10 rounded-full object-cover"
-                                />
-                                <div className="flex-1">
-                                    <div className="flex justify-between text-sm">
-                                        <span className="font-semibold">{chat.other_user.full_name}</span>
-                                        <span className="text-gray-400">
-                                            {new Date(chat.last_message_time).toLocaleTimeString([], {
-                                                hour: "2-digit",
-                                                minute: "2-digit"
-                                            })}
-                                        </span>
-                                    </div>
-                                    <div className="text-gray-500 text-sm truncate">
-                                        {chat.last_message?.content !== ""
-                                            ? chat.last_message?.content || "Không có tin nhắn"
-                                            : chat.last_message?.attachments[chat.last_message?.attachments.length - 1]
-                                                  .file_name}
+                    (chat) => {
+                        if ("last_message" in chat && chat.conversation_type !== 'group') {
+                            return (
+                                <div
+                                    key={chat.conversation_id}
+                                    className="flex gap-3 px-3 py-2 hover:bg-gray-100 cursor-pointer"
+                                    onClick={() => navigate(`/chat/${chat.conversation_id}`, {
+                                        state: {
+                                            chat: chat
+                                        }
+                                    })}
+                                >
+                                    <img
+                                        src={chat.other_user[0].avatar_url}
+                                        alt={chat.other_user[0].full_name}
+                                        className="w-10 h-10 rounded-full object-cover"
+                                    />
+                                    <div className="flex-1">
+                                        <div className="flex justify-between text-sm">
+                                            <span className="font-semibold">{chat.other_user[0].full_name}</span>
+                                            <span className="text-gray-400">
+                                                {new Date(chat.last_message_time).toLocaleTimeString([], {
+                                                    hour: "2-digit",
+                                                    minute: "2-digit"
+                                                })}
+                                            </span>
+                                        </div>
+                                        <div className={`${chat.unread ? "text-black font-bold text-md" : "text-gray-500 text-sm"} truncate`}>
+                                            <LastMessageCF chat={chat} />
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        )
+                            )
+                        }
+                        if (chat.conversation_type === 'group' && chat.last_message !== null) {
+                            return (
+                                <div
+                                    key={chat.conversation_id}
+                                    className="flex gap-3 px-3 py-2 hover:bg-gray-100 cursor-pointer"
+                                    onClick={() => navigate(`/chat/${chat.conversation_id}`, {
+                                        state: {
+                                            chat
+                                        }
+                                    })}
+                                >
+                                    <img
+                                        src={chat.group_avatar}
+                                        alt={chat.group_name}
+                                        className="w-10 h-10 rounded-full object-cover"
+                                    />
+                                    <div className="flex-1">
+                                        <div className="flex justify-between text-sm">
+                                            <span className="font-semibold">{chat.group_name}</span>
+                                            <span className="text-gray-400">
+                                                {new Date(chat.last_message_time).toLocaleTimeString([], {
+                                                    hour: "2-digit",
+                                                    minute: "2-digit"
+                                                })}
+                                            </span>
+                                        </div>
+                                        <div className={`${chat.unread ? "text-black font-bold text-md" : "text-gray-500 text-sm"} truncate`}>
+                                            <LastMessageCF chat={chat} />
+                                        </div>
+                                    </div>
+                                </div>
+                            )
+                        }
+                    }
+
+
+
+
                 )}
             </div>
         </div>

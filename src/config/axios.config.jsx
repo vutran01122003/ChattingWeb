@@ -29,10 +29,45 @@ instance.interceptors.request.use(
         }
 
         return config;
-    },
-    function (error) {
+        },
+        function (error) {
         return Promise.reject(error);
-    }
-);
+        }
+    );
 
-export default instance;
+    instance.interceptors.response.use(
+        (response) => response,
+        async (error) => {
+        const originalRequest = error.config;
+
+        if (error.response.status === 401 && !originalRequest._retry) {
+            originalRequest._retry = true;
+
+            try {
+            const { refreshToken, clientId } = getUserCredentials();
+            const response = await instance.post("/auth/refresh-token", {},
+                {
+                    headers: {
+                        "x-client-id": clientId,
+                        "refresh-token": refreshToken
+                    }
+                }
+            );
+            const { accessToken, refreshToken: refresh } = response.data.metadata.tokens;
+            
+            localStorage.setItem("accessToken", accessToken);
+            localStorage.setItem("refreshToken", refresh);
+
+            originalRequest.headers["authorization"] = accessToken;
+            
+            return instance(originalRequest);
+            } catch (error) {
+            return Promise.reject(error);
+            }
+        }
+
+        return Promise.reject(error);
+        }
+    );
+
+    export default instance;
