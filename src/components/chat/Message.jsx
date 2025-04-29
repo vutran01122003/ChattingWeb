@@ -1,17 +1,17 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { FaReplyAll, FaShare } from 'react-icons/fa';
 import { MdOutlineMoreHoriz } from "react-icons/md";
-import { FaSmile } from "react-icons/fa";
+import { IoMdClose } from "react-icons/io";
 import { SlLike } from "react-icons/sl";
 import MessageMenu from './MessageMenu';
 import FileAttachment from './FileAttachment';
 
 import { useDispatch, useSelector } from 'react-redux';
-import { addReaction, fetchConversations } from '../../redux/thunks/chatThunks'
-import { socketSelector } from "../../redux/selector";
+
 import ShareModal from '../modal/ShareModal';
 
-export default function Message({ message: msg, isMe, onImageClick, containerRef, otherUser, handleDeleteMessage, handleRevokeMessage, isRevoked, handleFowardMessage }) {
+export default function Message({ message: msg, isMe, onImageClick, containerRef, otherUser, handleDeleteMessage, handleRevokeMessage,
+    isRevoked, handleFowardMessage, handleAddReaction, handleUnreaction }) {
     const [hoveredMessageId, setHoveredMessageId] = useState(null);
     const [activeMenuMessageId, setActiveMenuMessageId] = useState(null);
     const [currentYScroll, setCurrentYScroll] = useState(0);
@@ -62,7 +62,7 @@ export default function Message({ message: msg, isMe, onImageClick, containerRef
             '😭': ":huhu",
             '😡': ":angry"
         }
-        dispatch(addReaction({ messageId: msg._id, reaction: emojiMap[emoji] }));
+        handleAddReaction({ messageId: msg._id, reaction: emojiMap[emoji] });
         setShowReactions(false);
     };
     const convertTextToEmoji = (reaction) => {
@@ -197,6 +197,15 @@ export default function Message({ message: msg, isMe, onImageClick, containerRef
                                             {emoji}
                                         </button>
                                     ))}
+                                    {
+                                        msg.reactions.length > 0 &&
+                                        (<button
+                                            className="w-8 h-8 flex items-center justify-center text-xl hover:bg-gray-100 rounded-full transition-transform"
+                                            onClick={()=> handleUnreaction({messageId: msg._id})}
+                                        >
+                                            <IoMdClose />
+                                        </button>)
+                                    }
                                 </div>
                             )}
 
@@ -338,6 +347,15 @@ export default function Message({ message: msg, isMe, onImageClick, containerRef
                                         {emoji}
                                     </button>
                                 ))}
+                                {
+                                    msg.reactions.length > 0 &&
+                                    (<button
+                                        className="w-8 h-8 flex items-center justify-center text-xl hover:bg-gray-100 rounded-full transition-transform"
+                                        onClick={()=> handleUnreaction({messageId: msg._id})}
+                                    >
+                                        <IoMdClose />
+                                    </button>)
+                                }
                             </div>
                         )}
 

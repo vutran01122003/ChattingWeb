@@ -1,5 +1,6 @@
 import { useDispatch, useSelector } from "react-redux";
-import { sendMessage, sendMessageWithFiles, markAsReadMessage, deleteMessage, revokeMessage, forwardMessage } from "../redux/thunks/chatThunks";
+import { sendMessage, sendMessageWithFiles, markAsReadMessage, 
+    deleteMessage, revokeMessage, forwardMessage, addReaction, unReactionMessage } from "../redux/thunks/chatThunks";
 import { getConversationMessages } from '../redux/thunks/chatThunks';
 
 import { socketSelector } from "../redux/selector";
@@ -94,25 +95,35 @@ export default function useChat(conversationId, setMessages) {
 
         }
     }
-    
-    const handleDeleteMessage = async ({messageId}) => {
-        dispatch(deleteMessage({messageId}));
-        socket.emit("delete_message", {conversation_id: conversationId, messageId});
+
+    const handleDeleteMessage = async ({ messageId }) => {
+        dispatch(deleteMessage({ messageId }));
+        socket.emit("delete_message", { conversation_id: conversationId, messageId });
     }
 
-    const handleRevokeMessage = async ({messageId}) => {
-        dispatch(revokeMessage({messageId}));
-        socket.emit("revoke_message", {conversation_id: conversationId, messageId});
+    const handleRevokeMessage = async ({ messageId }) => {
+        dispatch(revokeMessage({ messageId }));
+        socket.emit("revoke_message", { conversation_id: conversationId, messageId });
     }
 
-    const handleFowardMessage = async({messageId, targetConversationId}) => {
-        for(const conversation of targetConversationId){
-           console.log("forward")
-            dispatch(forwardMessage({messageId, targetConversationId: conversation})).then(_ =>{
-                socket.emit("forward_message", {conversation_id: conversationId});
+    const handleFowardMessage = async ({ messageId, targetConversationId }) => {
+        for (const conversation of targetConversationId) {
+            dispatch(forwardMessage({ messageId, targetConversationId: conversation })).then(_ => {
+                socket.emit("forward_message", { conversation_id: conversationId });
             });
-       }
+        }
     }
+    const handleAddReaction = async ({ messageId, reaction }) => {
+        dispatch(addReaction({ messageId, reaction })).then(_ => {
+            socket.emit("add_reaction", { conversation_id: conversationId});
+        });
+    }
+    const handleUnreaction =  ({messageId}) => {
+        dispatch(unReactionMessage(messageId)).then(_ => {
+            socket.emit("remove_reaction", { conversation_id: conversationId});
+        });
+    }
+
 
     return {
         handleSendMessage,
@@ -121,6 +132,8 @@ export default function useChat(conversationId, setMessages) {
         handleMarkAsRead,
         handleDeleteMessage,
         handleRevokeMessage,
-        handleFowardMessage
+        handleFowardMessage,
+        handleAddReaction,
+        handleUnreaction
     };
 }

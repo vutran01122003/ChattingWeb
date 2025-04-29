@@ -22,6 +22,7 @@ export default function ChatPage() {
     const [page, setPage] = useState(1);
     const [loading, setLoading] = useState(true);
     const [hasMore, setHasMore] = useState(true);
+    const [isReactionUpdating, setIsReactionUpdating] = useState(false);
     const [previousScrollHeightArr, setPreviousScrollHeightArr] = useState([]);
     const [userTyping, setUserTyping] = useState({});
     const [isTyping, setIsTyping] = useState(false);
@@ -29,6 +30,8 @@ export default function ChatPage() {
     const typingTimeoutRef = useRef(null);
     const containerRef = useRef(null);
     const messagesEndRef = useRef(null);
+    const pageRef = useRef(page);
+    const scrollRef = useRef(0)
     const location = useLocation();
     const {
         handleSendMessage,
@@ -37,7 +40,9 @@ export default function ChatPage() {
         handleMarkAsRead,
         handleDeleteMessage,
         handleRevokeMessage,
-        handleFowardMessage
+        handleFowardMessage,
+        handleAddReaction, 
+        handleUnreaction
     } = useChat(conversationId, setMessages);
 
     useEffect(() => {
@@ -45,6 +50,7 @@ export default function ChatPage() {
         if (conversationId && socket) {
             dispatch(getConversationMessages({ conversationId })).then((res) => {
                 setMessages(res.payload.messages);
+                setIsReactionUpdating(false);
                 socket.emit("focus_chat_page", { conversation_id: conversationId });
                 dispatch(fetchConversations());
             });
@@ -86,10 +92,42 @@ export default function ChatPage() {
                     typingTimeoutRef.current = setTimeout(() => setIsTyping(false), 3000);
                 }
             });
+            socket.on("reaction_addded", (data) => {
+                const prevScrollHeight = containerRef.current.scrollHeight;
+                const prevScrollTop = containerRef.current.scrollTop;
 
+                if (data && containerRef.current) {
+                    const limit = 20 * pageRef.current;
+                    setIsReactionUpdating(true);
+                    dispatch(getConversationMessages({ conversationId, limit })).then((res) => {
+                        setMessages(prev => {
+                            const newMsgIds = new Set(res.payload.messages.map(msg => msg._id));
+                            const merged = [...res.payload.messages, ...prev.filter(msg => !newMsgIds.has(msg._id))];
+                            return merged;
+                        });
+                            const newScrollHeight = containerRef.current.scrollHeight;
+                            containerRef.current.scrollTop = prevScrollTop + (newScrollHeight - prevScrollHeight);
+                    });
+                }
+            })
+            socket.on("reaction_removed", (data) => {
+                const prevScrollHeight = containerRef.current.scrollHeight;
+                const prevScrollTop = containerRef.current.scrollTop;
+
+                if (data && containerRef.current) {
+                    const limit = 20 * pageRef.current;
+                    setIsReactionUpdating(true);
+                    dispatch(getConversationMessages({ conversationId, limit })).then((res) => {
+                        setMessages(res.payload.messages);
+                            const newScrollHeight = containerRef.current.scrollHeight;
+                            containerRef.current.scrollTop = prevScrollTop + (newScrollHeight - prevScrollHeight);
+                    });
+                }
+            })
             socket.on("user_stop_typing", () => {
                 setIsTyping(false);
             });
+
 
             socket.on("message_deleted", (data) => {
                 if (data) {
@@ -134,9 +172,15 @@ export default function ChatPage() {
                 socket.off("message_deleted");
                 socket.off("message_revoked");
                 socket.off("message_forwarded");
+                socket.off("reaction_addded");
+                socket.off("reaction_removed");
             };
         }
     }, [socket, conversationId, user._id]);
+
+    useEffect(() => {
+        pageRef.current = page;
+    }, [page]);
 
     useEffect(() => {
         const initConversation = async () => {
@@ -159,7 +203,9 @@ export default function ChatPage() {
     }, []);
 
     useEffect(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        if (!isReactionUpdating) {
+            messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        }
     }, [messages]);
 
 
@@ -184,12 +230,16 @@ export default function ChatPage() {
         if (!conversationId || !hasMore) return;
         const res = await dispatch(getConversationMessages({ conversationId, page: page + 1 }));
         const newMessages = res.payload?.messages || [];
-
+        scrollRef.current = containerRef.current.scrollTop;
         if (newMessages.length === 0) {
             setHasMore(false);
         } else {
             setMessages(prev => [...prev, ...newMessages]);
-            setPage(prev => prev + 1);
+            setPage(prev => {
+                const newPage = prev + 1;
+                pageRef.current = newPage;
+                return newPage;
+            });
             setPreviousScrollHeightArr(prev => [...prev, containerRef.current.scrollHeight]);
         }
     };
@@ -211,6 +261,8 @@ export default function ChatPage() {
                 handleDeleteMessage={handleDeleteMessage}
                 handleRevokeMessage={handleRevokeMessage}
                 handleFowardMessage={handleFowardMessage}
+                handleAddReaction={handleAddReaction}
+                handleUnreaction={handleUnreaction}
             />
             {(isTyping && (userTyping._id !== user?._id)) && (
                 <div className="italic text-sm text-gray-500 px-2 py-1 z-50">{userTyping.full_name} đang nhập tin nhắn ...</div>

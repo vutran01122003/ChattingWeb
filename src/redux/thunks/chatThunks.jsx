@@ -188,5 +188,23 @@ export const addReaction = createAsyncThunk(
         err.response?.data?.message || 'Failed to add reaction',
       );
     }
-  },
+  });
+  export const unReactionMessage = createAsyncThunk(
+  'messages/unReactionMessage',
+  async (messageId, {rejectWithValue, getState}) => {
+    try {
+      const clientId = await localStorage.getItem('clientId');
+
+      const response = await axios.delete('/messages/reaction', {
+        data: {message_id: messageId},
+        headers: {'x-client-id': clientId},
+      });
+
+      return response.data.metadata;
+    } catch (err) {
+      return rejectWithValue(
+        err.response?.data?.message || 'Failed to mark conversation as read',
+      );
+    }
+  }
 );

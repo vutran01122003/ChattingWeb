@@ -141,11 +141,11 @@ function SideBar({ auth, setSelectedUser, selectedUserId }) {
                     </button>
                 </abbr>
             </div> */}
-            {
+            {/* {
                 conversations.map(chat => {
                     console.log(chat);
                 })
-            }
+            } */}
             {/* Vùng danh sách có scroll */}
             <div className="flex-1 overflow-y-auto">
                 {conversations.map(

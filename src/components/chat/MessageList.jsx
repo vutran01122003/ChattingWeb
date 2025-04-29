@@ -4,7 +4,10 @@ import Message from './Message';
 import DateHeader from '../header/DateHeader';
 
 export default function MessageList({ messages, user, containerRef, messagesEndRef,
-    loadMoreMessages, otherUser, conversation, handleDeleteMessage, handleRevokeMessage, handleFowardMessage}) {
+    loadMoreMessages, otherUser, conversation, handleDeleteMessage, 
+    handleRevokeMessage, handleFowardMessage, handleAddReaction,
+    handleUnreaction
+}) {
     const [selectedImagePreview, setSelectedImagePreview] = useState(null);
 
 
@@ -28,6 +31,8 @@ export default function MessageList({ messages, user, containerRef, messagesEndR
                         handleDeleteMessage={handleDeleteMessage}
                         handleRevokeMessage={handleRevokeMessage}
                         handleFowardMessage={handleFowardMessage}
+                        handleAddReaction={handleAddReaction}
+                        handleUnreaction={handleUnreaction}
                         isRevoked={msg.is_revoked}
                     />
                     {(!msg.read_by.includes(otherUser[0]._id)) ? (
@@ -67,6 +72,8 @@ export default function MessageList({ messages, user, containerRef, messagesEndR
                         handleDeleteMessage={handleDeleteMessage}
                         handleRevokeMessage={handleRevokeMessage}
                         handleFowardMessage={handleFowardMessage}
+                        handleAddReaction={handleAddReaction}
+                        handleUnreaction={handleUnreaction}
                         isRevoked={msg.isRevoked}
                     />
                 </div>
