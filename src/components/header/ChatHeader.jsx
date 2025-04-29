@@ -4,8 +4,19 @@ import { Phone } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { authSelector, peerSelector, socketSelector } from "../../redux/selector";
 import { callUser } from "../../redux/slices/callSlice";
+import { FiUserPlus, FiUserMinus } from "react-icons/fi";
 
-export default function ChatHeader({ otherUser }) {
+import { Fragment } from "react";
+
+export default function ChatHeader({
+    otherUser,
+    handleSendFriendRequest,
+    handleUnfriendUser,
+    isFriend,
+    isSentRequest,
+    isReceiveRequest,
+    handleAcceptFriendRequest
+}) {
     const dispatch = useDispatch();
     const auth = useSelector(authSelector);
     const peer = useSelector(peerSelector);
@@ -68,16 +79,27 @@ export default function ChatHeader({ otherUser }) {
             </div>
             <div className="ml-auto flex">
                 <button className="p-2">
-                    <FaUserPlus className="h-6 w-6 text-gray-500" />
+                    {isFriend ? (
+                        <FiUserMinus className="h-6 w-6 text-gray-500 cursor-pointer" onClick={handleUnfriendUser} />
+                    ) : (
+                        <Fragment>
+                            {!isSentRequest && (
+                                <FiUserPlus
+                                    className="h-6 w-6 text-gray-500 cursor-pointer"
+                                    onClick={isReceiveRequest ? handleAcceptFriendRequest : handleSendFriendRequest}
+                                />
+                            )}
+                        </Fragment>
+                    )}
                 </button>
                 <button className="p-2" onClick={handleCallAudioUser}>
-                    <Phone className="h-6 w-6 text-gray-500" />
+                    <Phone className="h-6 w-6 text-gray-500 cursor-pointer" />
                 </button>
                 <button className="p-2">
-                    <BsCameraVideo className="h-6 w-6 text-gray-500" onClick={handleCallVideoUser} />
+                    <BsCameraVideo className="h-6 w-6 text-gray-500 cursor-pointer" onClick={handleCallVideoUser} />
                 </button>
                 <button className="p-2">
-                    <BsLayoutSidebarReverse className="h-6 w-6 text-gray-500" />
+                    <BsLayoutSidebarReverse className="h-6 w-6 text-gray-500 cursor-pointer" />
                 </button>
             </div>
         </div>

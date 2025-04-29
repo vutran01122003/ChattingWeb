@@ -16,7 +16,8 @@ import QrLogin from "./pages/QrLogin";
 import SocketClient from "./SocketClient";
 import PeerClient from "./PeerClient";
 import ChatPage from "./pages/ChatPage";
-import ProtectedChatRoute from "./pages/ProtectedChatRoute";
+import FriendRequestsScreen from "./pages/FriendRequestsScreen";
+import ListFriendScreen from "./pages/ListFriendScreen";
 
 function App() {
     const dispatch = useDispatch();
@@ -33,8 +34,8 @@ function App() {
         <Fragment>
             {auth?.user && (
                 <Fragment>
-                    <SocketClient auth={auth} />
-                    <PeerClient auth={auth} />
+                    {/* <SocketClient auth={auth} />
+                    <PeerClient auth={auth} /> */}
                 </Fragment>
             )}
 
@@ -48,6 +49,8 @@ function App() {
                 <Route path="/update-info" element={<UpdateUserInfo />} />
                 <Route path="/" element={auth.user ? <Layout auth={auth} /> : <LoginPage />}>
                     <Route index element={<HomePage />} />
+                    <Route path="friend-request" element={<FriendRequestsScreen />} />
+                    <Route path="list-friend" element={<ListFriendScreen />} />
                     <Route path="/chat/:otherId" element={<ChatPage />} />
                     <Route path="*" element={<NotfoundPage />} />
                 </Route>

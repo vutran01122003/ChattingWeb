@@ -12,6 +12,10 @@ const publicEndpoints = [
     "/auth/checkQRSession",
     "/user/getAllUser",
     "user/getUserBySearch",
+    "/user/check-friendShip",
+    "/user/send-friend-request",
+    "/user/check-send-friend-request",
+    "/user/cancel-friend-request",
 ];
 
 const instance = axios.create({
