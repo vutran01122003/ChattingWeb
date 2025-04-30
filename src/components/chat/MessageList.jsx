@@ -13,7 +13,9 @@ export default function MessageList({
     conversation,
     handleDeleteMessage,
     handleRevokeMessage,
-    handleFowardMessage
+    handleFowardMessage,
+    handleAddReaction,
+    handleUnreaction
 }) {
     const [selectedImagePreview, setSelectedImagePreview] = useState(null);
 
@@ -34,6 +36,8 @@ export default function MessageList({
                         handleDeleteMessage={handleDeleteMessage}
                         handleRevokeMessage={handleRevokeMessage}
                         handleFowardMessage={handleFowardMessage}
+                        handleAddReaction={handleAddReaction}
+                        handleUnreaction={handleUnreaction}
                         isRevoked={msg.is_revoked}
                     />
                     {otherUser && !msg.read_by.includes(otherUser[0]._id) ? (
@@ -71,6 +75,8 @@ export default function MessageList({
                         handleDeleteMessage={handleDeleteMessage}
                         handleRevokeMessage={handleRevokeMessage}
                         handleFowardMessage={handleFowardMessage}
+                        handleAddReaction={handleAddReaction}
+                        handleUnreaction={handleUnreaction}
                         isRevoked={msg.isRevoked}
                     />
                 </div>

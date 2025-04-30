@@ -34,7 +34,7 @@ function App() {
                 const callData = JSON.parse(localStorage.getItem("callData"));
                 const userId = localStorage.getItem("clientId");
 
-                if (Object.keys(callData).length > 0 && userId) {
+                if (callData && Object.keys(callData).length > 0 && userId) {
                     const senderId = callData.sender?._id;
                     const receiverId = callData.receiver?._id;
                     const { clientId, accessToken } = getUserCredentials();

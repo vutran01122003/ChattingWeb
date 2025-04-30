@@ -62,9 +62,14 @@ function SideBar({ auth, setSelectedUser, selectedUserId }) {
         } else if (chat.last_message.is_revoked) {
             return "Tin nhắn đã được thu hồi";
         } else {
-            return chat.last_message?.content !== ""
-                ? chat.last_message?.content || "Không có tin nhắn"
-                : chat.last_message?.attachments[chat.last_message?.attachments.length - 1].file_name;
+            const content = chat.last_message?.content;
+            const file_name = chat.last_message?.attachments[chat.last_message?.attachments.length - 1]?.file_name;
+
+            const splitContent = (content) => {
+                return content.length > 30 ? content.slice(0, 30) + "..." : content;
+            };
+
+            return content !== "" ? splitContent(content) || "Không có tin nhắn" : splitContent(file_name);
         }
     };
 
@@ -181,7 +186,7 @@ function SideBar({ auth, setSelectedUser, selectedUserId }) {
                                     <div
                                         className={`${
                                             chat.unread ? "text-black font-bold text-md" : "text-gray-500 text-sm"
-                                        } truncate`}
+                                        }`}
                                     >
                                         <LastMessageCF chat={chat} />
                                     </div>
@@ -220,7 +225,7 @@ function SideBar({ auth, setSelectedUser, selectedUserId }) {
                                     <div
                                         className={`${
                                             chat.unread ? "text-black font-bold text-md" : "text-gray-500 text-sm"
-                                        } truncate`}
+                                        }`}
                                     >
                                         <LastMessageCF chat={chat} />
                                     </div>

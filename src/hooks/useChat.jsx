@@ -5,7 +5,9 @@ import {
     markAsReadMessage,
     deleteMessage,
     revokeMessage,
-    forwardMessage
+    forwardMessage,
+    addReaction,
+    unReactionMessage
 } from "../redux/thunks/chatThunks";
 import { getConversationMessages } from "../redux/thunks/chatThunks";
 
@@ -119,6 +121,17 @@ export default function useChat(conversationId, setMessages) {
         }
     };
 
+    const handleAddReaction = async ({ messageId, reaction }) => {
+        dispatch(addReaction({ messageId, reaction })).then((_) => {
+            socket.emit("add_reaction", { conversation_id: conversationId });
+        });
+    };
+    const handleUnreaction = ({ messageId }) => {
+        dispatch(unReactionMessage(messageId)).then((_) => {
+            socket.emit("remove_reaction", { conversation_id: conversationId });
+        });
+    };
+
     return {
         handleSendMessage,
         handleImageUpload,
@@ -126,6 +139,8 @@ export default function useChat(conversationId, setMessages) {
         handleMarkAsRead,
         handleDeleteMessage,
         handleRevokeMessage,
-        handleFowardMessage
+        handleFowardMessage,
+        handleAddReaction,
+        handleUnreaction
     };
 }
