@@ -11,13 +11,15 @@ import Layout from "./components/layout/Layout";
 import ForgotPassword from "./pages/ForgotPassword";
 import ForgotPasswordConfirmation from "./pages/ForgotPasswordConfirmation";
 import { getUserDataByTokensAndClientId } from "./redux/slices/authSlice";
-import { authSelector } from "./redux/selector";
+import { authSelector, callSelector, socketSelector } from "./redux/selector";
 import QrLogin from "./pages/QrLogin";
 import SocketClient from "./SocketClient";
 import PeerClient from "./PeerClient";
 import ChatPage from "./pages/ChatPage";
 import FriendRequestsScreen from "./pages/FriendRequestsScreen";
 import ListFriendScreen from "./pages/ListFriendScreen";
+import { postDataApi } from "./utils/fetchData";
+import { getUserCredentials } from "./utils";
 
 function App() {
     const dispatch = useDispatch();
@@ -26,6 +28,30 @@ function App() {
 
     useEffect(() => {
         dispatch(getUserDataByTokensAndClientId({ setIsLoading }));
+
+        if (window.performance) {
+            if (performance.navigation.type === 1) {
+                const callData = JSON.parse(localStorage.getItem("callData"));
+                const userId = localStorage.getItem("clientId");
+
+                if (Object.keys(callData).length > 0 && userId) {
+                    const senderId = callData.sender?._id;
+                    const receiverId = callData.receiver?._id;
+                    const { clientId, accessToken } = getUserCredentials();
+
+                    postDataApi(
+                        "/sockets/end-call",
+                        {
+                            restUserId: clientId === senderId ? receiverId : senderId
+                        },
+                        {
+                            "x-client-id": clientId,
+                            Authorization: accessToken
+                        }
+                    );
+                }
+            }
+        }
     }, []);
 
     if (isLoading) return null;
@@ -34,8 +60,8 @@ function App() {
         <Fragment>
             {auth?.user && (
                 <Fragment>
-                    {/* <SocketClient auth={auth} />
-                    <PeerClient auth={auth} /> */}
+                    <SocketClient auth={auth} />
+                    <PeerClient auth={auth} />
                 </Fragment>
             )}
 
@@ -51,7 +77,7 @@ function App() {
                     <Route index element={<HomePage />} />
                     <Route path="friend-request" element={<FriendRequestsScreen />} />
                     <Route path="list-friend" element={<ListFriendScreen />} />
-                    <Route path="/chat/:otherId" element={<ChatPage />} />
+                    <Route path="/chat/:conversationId" element={<ChatPage />} />
                     <Route path="*" element={<NotfoundPage />} />
                 </Route>
             </Routes>

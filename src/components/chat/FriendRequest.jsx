@@ -9,17 +9,22 @@ function FriendRequest({
     isFriend,
     isSentRequest,
     isReceiveRequest,
-    handleAcceptFriendRequest
+    handleAcceptFriendRequest,
+    conversation
 }) {
     const dispatch = useDispatch();
 
     useEffect(() => {
-        if (selectedUser) {
-            dispatch(checkFriendShip({ friendId: selectedUser._id }));
-            dispatch(checkSendFriendRequest({ friendId: selectedUser._id }));
-            dispatch(checkReceiveFriendRequest({ friendId: selectedUser._id }));
+        if (selectedUser && conversation) {
+            const conversationType = conversation.conversation_type;
+            if (conversationType !== "group") {
+                const user = selectedUser[0];
+                dispatch(checkFriendShip({ friendId: user._id }));
+                dispatch(checkSendFriendRequest({ friendId: user._id }));
+                dispatch(checkReceiveFriendRequest({ friendId: user._id }));
+            }
         }
-    }, [selectedUser, dispatch]);
+    }, [selectedUser, conversation, dispatch]);
 
     return (
         <Fragment>

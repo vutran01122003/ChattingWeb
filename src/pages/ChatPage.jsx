@@ -1,10 +1,8 @@
 import { useState, useRef, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { ClipLoader } from "react-spinners";
 
-import { authSelector } from "../redux/selector";
-import { createOrGetConversation, getConversationMessages } from "../redux/thunks/chatThunks";
 import ChatHeader from "../components/header/ChatHeader";
 import MessageList from "../components/chat/MessageList";
 import MessageInput from "../components/chat/MessageInput";
@@ -18,13 +16,17 @@ import {
     unfriendUser,
     acceptFriendRequest
 } from "../redux/slices/friendSlice";
+import { authSelector, socketSelector } from "../redux/selector";
+import { getConversation, getConversationMessages, fetchConversations } from "../redux/thunks/chatThunks";
 
 export default function ChatPage() {
     const dispatch = useDispatch();
-    const { otherId } = useParams();
+    const socket = useSelector(socketSelector);
     const [isHidden, setIsHidden] = useState(false);
-    const conversationId = useSelector((state) => state.chat.friendConversations[0]?.conversation_id);
     const { isFriend, isSentRequest, isReceiveRequest } = useSelector((state) => state.friendship);
+    const { conversationId } = useParams();
+    const a = useParams();
+
     const fetchMessages = useSelector((state) => state.chat.messages);
     const { user } = useSelector(authSelector);
     const [messages, setMessages] = useState(fetchMessages);
@@ -33,10 +35,12 @@ export default function ChatPage() {
     const [loading, setLoading] = useState(true);
     const [hasMore, setHasMore] = useState(true);
     const [previousScrollHeightArr, setPreviousScrollHeightArr] = useState([]);
+    const [userTyping, setUserTyping] = useState({});
+    const [isTyping, setIsTyping] = useState(false);
+    const [conversation, setConversation] = useState(null);
+    const typingTimeoutRef = useRef(null);
     const containerRef = useRef(null);
     const messagesEndRef = useRef(null);
-
-    const { handleSendMessage, handleImageUpload, handleFileUpload } = useChat(conversationId, setMessages);
 
     const handleSendFriendRequest = (event) => {
         event.preventDefault();
@@ -70,18 +74,117 @@ export default function ChatPage() {
         }, 1000);
     };
 
+    const location = useLocation();
+    const {
+        handleSendMessage,
+        handleImageUpload,
+        handleFileUpload,
+        handleMarkAsRead,
+        handleDeleteMessage,
+        handleRevokeMessage,
+        handleFowardMessage
+    } = useChat(conversationId, setMessages);
+
     useEffect(() => {
-        if (conversationId) {
+        setConversation(location.state?.chat);
+        if (conversationId && socket) {
             dispatch(getConversationMessages({ conversationId })).then((res) => {
                 setMessages(res.payload.messages);
+                socket.emit("focus_chat_page", { conversation_id: conversationId });
+                dispatch(fetchConversations());
             });
         }
-    }, [conversationId, dispatch]);
+    }, [socket, conversationId, dispatch]);
+
+    useEffect(() => {
+        if (socket && conversationId) {
+            socket.emit("join_conversation", conversationId);
+            socket.on("message_read", (data) => {
+                if (data) {
+                    dispatch(getConversationMessages({ conversationId })).then((res) => {
+                        setMessages(res.payload.messages);
+                    });
+                }
+            });
+            socket.on("receive_message", (message) => {
+                if (message.conversation_id === conversationId) {
+                    dispatch(getConversationMessages({ conversationId })).then((res) => {
+                        setMessages(res.payload.messages);
+                    });
+                    if (message.sender._id !== user._id) {
+                        handleMarkAsRead();
+                    }
+                }
+            });
+            socket.on("conversation_updated", (message) => {
+                if (message) {
+                    dispatch(fetchConversations());
+                }
+            });
+            socket.on("user_typing", (data) => {
+                if (data.conversation_id === conversationId && data.user._id !== user._id) {
+                    setIsTyping(true);
+                    setUserTyping(data.user);
+                    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+                    typingTimeoutRef.current = setTimeout(() => setIsTyping(false), 3000);
+                }
+            });
+
+            socket.on("user_stop_typing", () => {
+                setIsTyping(false);
+            });
+
+            socket.on("message_deleted", (data) => {
+                if (data) {
+                    dispatch(getConversationMessages({ conversationId })).then((res) => {
+                        setMessages(res.payload.messages);
+                        dispatch(fetchConversations());
+                    });
+                }
+            });
+
+            socket.on("message_revoked", (data) => {
+                if (data) {
+                    dispatch(getConversationMessages({ conversationId })).then((res) => {
+                        setMessages(res.payload.messages);
+                        dispatch(fetchConversations());
+                    });
+                }
+            });
+
+            socket.on("message_forwarded", (data) => {
+                if (data) {
+                    dispatch(getConversationMessages({ conversationId })).then((res) => {
+                        setMessages(res.payload.messages);
+                    });
+                }
+            });
+
+            socket.on("focused_on_page", (data) => {
+                if (data) {
+                    dispatch(getConversationMessages({ conversationId })).then((res) => {
+                        setMessages(res.payload.messages);
+                    });
+                }
+            });
+
+            return () => {
+                socket.off("receive_message");
+                socket.off("user_typing");
+                socket.off("user_stop_typing");
+                socket.off("message_read");
+                socket.off("focused_on_page");
+                socket.off("message_deleted");
+                socket.off("message_revoked");
+                socket.off("message_forwarded");
+            };
+        }
+    }, [socket, conversationId, user._id]);
 
     useEffect(() => {
         const initConversation = async () => {
             try {
-                const res = await dispatch(createOrGetConversation({ otherUserId: otherId }));
+                const res = await dispatch(getConversation(conversationId));
                 if (res?.payload?.other_user) {
                     setOtherUser(res.payload.other_user);
                 }
@@ -92,10 +195,13 @@ export default function ChatPage() {
 
         initConversation();
         setTimeout(() => setLoading(false), 2000);
-    }, [otherId, dispatch]);
+    }, [conversationId, dispatch]);
 
     useEffect(() => {
         setPreviousScrollHeightArr((prev) => [...prev, containerRef.current.scrollHeight]);
+    }, []);
+
+    useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [messages]);
 
@@ -105,7 +211,7 @@ export default function ChatPage() {
                 previousScrollHeightArr[previousScrollHeightArr.length - 1] -
                 previousScrollHeightArr[previousScrollHeightArr.length - 2];
         }
-    }, [previousScrollHeightArr]);
+    }, [previousScrollHeightArr.length]);
 
     useEffect(() => {
         if (window.performance) {
@@ -115,7 +221,6 @@ export default function ChatPage() {
             }
         }
     }, []);
-
     if (isHidden) return null;
 
     const loadMoreMessages = async () => {
@@ -128,6 +233,7 @@ export default function ChatPage() {
         } else {
             setMessages((prev) => [...prev, ...newMessages]);
             setPage((prev) => prev + 1);
+            setPreviousScrollHeightArr((prev) => [...prev, containerRef.current.scrollHeight]);
         }
     };
 
@@ -145,6 +251,7 @@ export default function ChatPage() {
                 isReceiveRequest={isReceiveRequest}
                 isFriend={isFriend}
                 handleAcceptFriendRequest={handleAcceptFriendRequest}
+                conversation={conversation}
             />
 
             <FriendRequest
@@ -155,6 +262,7 @@ export default function ChatPage() {
                 isSentRequest={isSentRequest}
                 isReceiveRequest={isReceiveRequest}
                 handleAcceptFriendRequest={handleAcceptFriendRequest}
+                conversation={conversation}
             />
 
             <MessageList
@@ -163,12 +271,24 @@ export default function ChatPage() {
                 containerRef={containerRef}
                 messagesEndRef={messagesEndRef}
                 loadMoreMessages={loadMoreMessages}
+                otherUser={otherUser}
+                conversation={conversation}
+                handleDeleteMessage={handleDeleteMessage}
+                handleRevokeMessage={handleRevokeMessage}
+                handleFowardMessage={handleFowardMessage}
             />
-
+            {isTyping && userTyping._id !== user?._id && (
+                <div className="italic text-sm text-gray-500 px-2 py-1 z-50">
+                    {userTyping.full_name} đang nhập tin nhắn ...
+                </div>
+            )}
             <MessageInput
                 onSendMessage={handleSendMessage}
                 onImageUpload={handleImageUpload}
                 onFileUpload={handleFileUpload}
+                socket={socket}
+                user={user}
+                conversationId={conversationId}
             />
         </div>
     );

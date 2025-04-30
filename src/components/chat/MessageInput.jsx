@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { FaRegSmile, FaRegAddressCard } from "react-icons/fa";
 import { CiChat1 } from "react-icons/ci";
 import { AiOutlinePicture, AiOutlinePaperClip } from "react-icons/ai";
@@ -8,14 +9,18 @@ import { BiSolidLike } from "react-icons/bi";
 import EmojiPicker from "./EmojiPicker";
 import FilePopup from "./FilePopup";
 
-export default function MessageInput({ onSendMessage, onImageUpload, onFileUpload }) {
+import { authSelector } from "../../redux/selector";
+
+
+export default function MessageInput({ onSendMessage, onImageUpload, onFileUpload, socket, conversationId }) {
     const [message, setMessage] = useState("");
     const [showStickerPopup, setShowStickerPopup] = useState(false);
     const [showFilePopup, setShowFilePopup] = useState(false);
+    const { user } = useSelector(authSelector);
     const textareaRef = useRef(null);
     const fileInputRef = useRef(null);
     const imageInputRef = useRef(null);
-
+    const typingTimeoutRef = useRef(null);
     useEffect(() => {
         if (textareaRef.current) {
             textareaRef.current.style.height = "auto";
@@ -54,12 +59,27 @@ export default function MessageInput({ onSendMessage, onImageUpload, onFileUploa
         }
     };
 
+    const handleTyping = () => {
+        if (!socket || !user || !conversationId) return;
+        socket.emit("typing", {
+            user,
+            conversation_id: conversationId
+        });
+
+        if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+
+        typingTimeoutRef.current = setTimeout(() => {
+            socket.emit("stop_typing", { conversation_id: conversationId });
+        }, 1000);
+    };
+
     const handleChangeMessage = (e) => {
         const value = e.target.value;
         const wordCount = value.trim().split(/\s+/).length;
 
         if (wordCount <= 200) {
             setMessage(value);
+            handleTyping();
         } else {
             alert("Bạn đã vượt quá số lượng từ tối đa cho phép là 200 từ.");
             setMessage(value.split(/\s+/).slice(0, 200).join(" "));
@@ -71,6 +91,8 @@ export default function MessageInput({ onSendMessage, onImageUpload, onFileUploa
         setShowStickerPopup(false);
     };
 
+    
+   
     return (
         <div className="border-t border-gray-300 p-2 flex items-center relative">
             <div className="flex space-x-2 mr-2">

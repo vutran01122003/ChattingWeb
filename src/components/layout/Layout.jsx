@@ -4,7 +4,7 @@ import { useSelector } from "react-redux";
 import Tab from "./Tab";
 import SideBar from "./Sidebar";
 import SideBarContact from "./SidebarContact";
-import CallModal from "../message/CallModal";
+import CallModal from "../call/CallModal";
 import { callSelector, peerSelector, socketSelector } from "../../redux/selector";
 
 function Layout({ auth }) {

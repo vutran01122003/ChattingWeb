@@ -7,7 +7,7 @@ function EditProfile({ user, file, setFile, onToggleVisibleEditModal }) {
     const [fullName, setFullName] = useState(user?.full_name || "");
     const [dateOfBirth, setDateOfBirth] = useState(user?.date_of_birth?.split("T")[0] || "");
     const [gender, setGender] = useState(user?.gender);
-    console.log(dateOfBirth);
+
     const onEditProfile = () => {
         dispatch(
             editProfile({

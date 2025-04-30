@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { callSelector, peerSelector, socketSelector } from "./redux/selector";
 import getStream from "./utils/getStream";
-import CallUserModal from "./components/message/CallUserModal";
+import CallUserModal from "./components/call/CallUserModal";
 import { setPeer } from "./redux/slices/peerSlice";
 import { calling, callUser } from "./redux/slices/callSlice";
 
@@ -144,7 +144,6 @@ function PeerClient({ auth }) {
             path: "/",
             secure: true
         });
-
         newPeer.on("open", () => {
             peerRef.current = newPeer;
             dispatch(setPeer(newPeer.id));

@@ -16,7 +16,7 @@ function OTPVerificationPage() {
     const [canResend, setCanResend] = useState(false);
     const inputRefs = useRef([]);
     const navigate = useNavigate();
-    console.log(prevPage);
+
     useEffect(() => {
         if (inputRefs.current[0]) {
             inputRefs.current[0].focus();

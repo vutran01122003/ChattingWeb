@@ -19,16 +19,14 @@ export const fetchConversations = createAsyncThunk(
   },
 );
 
-export const createOrGetConversation = createAsyncThunk(
-  'conversation/createOrGetConversation',
-  async ({otherUserId}, {rejectWithValue}) => {
+export const getConversation = createAsyncThunk(
+  'conversation/getConversation',
+  async (conversationId, {rejectWithValue}) => {
     try {
       const clientId = localStorage.getItem('clientId');
-      const response = await axios.post(
-        '/conversations',
-        {otherUserId},
-        {headers: {'x-client-id': clientId}},
-      );
+      const response = await axios.get(`/conversations/${conversationId}`, {
+        headers: {'x-client-id': clientId},
+      });
       return response.data.metadata;
     } catch (err) {
       return rejectWithValue(
@@ -103,7 +101,7 @@ export const revokeMessage = createAsyncThunk(
   async ({messageId}, {rejectWithValue}) => {
     try {
       const clientId = localStorage.getItem('clientId');
-      const response = await axios.put(`/messages/${messageId}/revoke`, {
+      const response = await axios.put(`/messages/${messageId}/revoke`, {}, {
         headers: {'x-client-id': clientId},
       });
       return response.data.metadata;
@@ -120,7 +118,7 @@ export const deleteMessage = createAsyncThunk(
   async ({messageId}, {rejectWithValue}) => {
     try {
       const clientId = localStorage.getItem('clientId');
-      const response = await axios.put(`/messages/${messageId}/delete`, {
+      const response = await axios.put(`/messages/${messageId}/delete`, {}, {
         headers: {'x-client-id': clientId},
       });
       return response.data.metadata;
@@ -137,7 +135,7 @@ export const markAsReadMessage = createAsyncThunk(
   async ({conversationId}, {rejectWithValue}) => {
     try {
       const clientId = localStorage.getItem('clientId');
-      const response = await axios.post(
+      const response = await axios.put(
         '/messages/mark-as-read',
         {
           conversation_id: conversationId,
@@ -157,8 +155,8 @@ export const forwardMessage = createAsyncThunk(
   'message/forwardMessage',
   async ({messageId, targetConversationId}, {rejectWithValue, getState}) => {
     try {
-      const clientId = await AsyncStorage.getItem('client_id');
-      const response = await axios.put(
+      const clientId = await localStorage.getItem('clientId');
+      const response = await axios.post(
         '/messages/forward',
         {
           message_id: messageId,
@@ -170,6 +168,24 @@ export const forwardMessage = createAsyncThunk(
     } catch (err) {
       return rejectWithValue(
         err.response?.data?.message || 'Failed to mark conversation as read',
+      );
+    }
+  },
+);
+export const addReaction = createAsyncThunk(
+  'message/addReaction',
+  async ({messageId, reaction}, {rejectWithValue}) => {
+    try {
+      const clientId = localStorage.getItem('clientId');
+      const response = await axios.post(
+        `/messages/reaction`,
+        {message_id: messageId, emoji: reaction},
+        {headers: {'x-client-id': clientId}},
+      );
+      return response.data.metadata;
+    } catch (err) {
+      return rejectWithValue(
+        err.response?.data?.message || 'Failed to add reaction',
       );
     }
   },
