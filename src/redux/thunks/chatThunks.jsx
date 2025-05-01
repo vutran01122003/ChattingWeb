@@ -2,6 +2,24 @@ import { createAsyncThunk } from "@reduxjs/toolkit";
 
 import axios from "../../config/axios.config";
 
+export const createConversation = createAsyncThunk(
+    "conversation/createConversation",
+    async (data, { rejectWithValue }) => {
+        try {
+            console.log(data);
+            const clientId = localStorage.getItem("clientId");
+            const response = await axios.post("/conversations", data, {
+                headers: { "x-client-id": clientId }
+            });
+            console.log(response.data);
+            return response.data.metadata;
+        } catch (err) {
+            console.log(err);
+            return rejectWithValue(err.response?.data?.message || "Failed to create conversation");
+        }
+    }
+);
+
 export const fetchConversations = createAsyncThunk(
     "conversation/fetchConversations",
     async (_, { rejectWithValue }) => {

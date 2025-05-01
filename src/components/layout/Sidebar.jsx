@@ -1,25 +1,32 @@
 import { useDispatch, useSelector } from "react-redux";
 import { getUserBySearch, getAllUser } from "../../redux/slices/authSlice";
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, Fragment } from "react";
 import { useNavigate } from "react-router-dom";
+import { TbUsersPlus } from "react-icons/tb";
 
 import { fetchConversations } from "../../redux/thunks/chatThunks";
 import { socketSelector, authSelector } from "../../redux/selector";
+import CreateGroupModal from "../modal/CreategroupModal";
 function SideBar({ auth, setSelectedUser, selectedUserId }) {
-    const [activeTab, setActiveTab] = useState("all");
-    const [searchTerm, setSearchTerm] = useState("");
+    const navigate = useNavigate();
     const dispatch = useDispatch();
     const socket = useSelector(socketSelector);
     const { user } = useSelector(authSelector);
+    const [activeTab, setActiveTab] = useState("all");
+    const [searchTerm, setSearchTerm] = useState("");
     const allUsers = useSelector((state) => state.auth.allUsers);
     const searchResults = useSelector((state) => state.auth.searchResults);
     const [search, setSearch] = useState("");
-    const navigate = useNavigate();
-
+    const [isVisibleCreateGroupModal, setIsVisibleCreateGroupModal] = useState(false);
     const { friendConversations, strangerConversations, groupConversations } = useSelector((state) => state.chat);
+
     const conversations = useMemo(() => {
         return [...friendConversations, ...strangerConversations, ...groupConversations];
     }, [friendConversations, strangerConversations, groupConversations]);
+
+    const handleToggleDisplayCreateGroupModal = () => {
+        setIsVisibleCreateGroupModal((prev) => !prev);
+    };
 
     useEffect(() => {
         dispatch(fetchConversations());
@@ -57,16 +64,16 @@ function SideBar({ auth, setSelectedUser, selectedUserId }) {
             : allUsers;
 
     const LastMessageCF = ({ chat }) => {
-        if (chat.last_message.deleted_by && chat.last_message.deleted_by.includes(user._id)) {
+        if (chat.last_message?.deleted_by && chat.last_message?.deleted_by.includes(user._id)) {
             return "Tin nhắn đã bị xóa";
-        } else if (chat.last_message.is_revoked) {
+        } else if (chat.last_message?.is_revoked) {
             return "Tin nhắn đã được thu hồi";
         } else {
             const content = chat.last_message?.content;
             const file_name = chat.last_message?.attachments[chat.last_message?.attachments.length - 1]?.file_name;
 
             const splitContent = (content) => {
-                return content.length > 30 ? content.slice(0, 30) + "..." : content;
+                return content && content.length > 30 ? content.slice(0, 30) + "..." : content;
             };
 
             return content !== "" ? splitContent(content) || "Không có tin nhắn" : splitContent(file_name);
@@ -74,40 +81,50 @@ function SideBar({ auth, setSelectedUser, selectedUserId }) {
     };
 
     return (
-        <div className="w-xs h-screen flex flex-col border-r border-gray-200">
-            {/* Thanh tìm kiếm + nút */}
-            <div className="flex gap-1 items-center p-3">
-                <input
-                    type="text"
-                    placeholder="Tìm kiếm"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="flex-1 bg-gray-100 px-2.5 py-1 rounded-sm outline-none focus:border border-blue-500"
-                />
-            </div>
+        <Fragment>
+            {isVisibleCreateGroupModal && (
+                <CreateGroupModal handleToggleDisplayCreateGroupModal={handleToggleDisplayCreateGroupModal} />
+            )}
+            <div className="w-xs h-screen flex flex-col border-r border-gray-200">
+                {/* Thanh tìm kiếm + nút */}
+                <div className="flex gap-1 items-center p-3">
+                    <input
+                        type="text"
+                        placeholder="Tìm kiếm"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="flex-1 bg-gray-100 px-2.5 py-1 rounded-sm outline-none focus:border border-blue-500"
+                    />
 
-            <div className="flex items-center px-3 text-sm">
-                <button
-                    onClick={() => setActiveTab("all")}
-                    className={`py-2 mr-4 ${
-                        activeTab === "all" ? "text-blue-600 font-semibold border-b-2 border-blue-600" : "text-gray-600"
-                    }`}
-                >
-                    Tất cả
-                </button>
-                <button
-                    onClick={() => setActiveTab("unread")}
-                    className={`py-2 mr-4 ${
-                        activeTab === "unread"
-                            ? "text-blue-600 font-semibold border-b-2 border-blue-600"
-                            : "text-gray-600"
-                    }`}
-                >
-                    Chưa đọc
-                </button>
-            </div>
+                    <div onClick={handleToggleDisplayCreateGroupModal}>
+                        <TbUsersPlus />
+                    </div>
+                </div>
 
-            {/* <div className="overflow-y-auto flex-1">
+                <div className="flex items-center px-3 text-sm">
+                    <button
+                        onClick={() => setActiveTab("all")}
+                        className={`py-2 mr-4 ${
+                            activeTab === "all"
+                                ? "text-blue-600 font-semibold border-b-2 border-blue-600"
+                                : "text-gray-600"
+                        }`}
+                    >
+                        Tất cả
+                    </button>
+                    <button
+                        onClick={() => setActiveTab("unread")}
+                        className={`py-2 mr-4 ${
+                            activeTab === "unread"
+                                ? "text-blue-600 font-semibold border-b-2 border-blue-600"
+                                : "text-gray-600"
+                        }`}
+                    >
+                        Chưa đọc
+                    </button>
+                </div>
+
+                {/* <div className="overflow-y-auto flex-1">
                 {filteredUsers?.map((user) => {
                     if (auth?.user?._id === user._id) return null;
 
@@ -147,95 +164,96 @@ function SideBar({ auth, setSelectedUser, selectedUserId }) {
                     </button>
                 </abbr>
             </div> */}
-            {/* 
+                {/* 
             {conversations.map((chat) => {
                 console.log(chat);
             })} */}
 
-            {/* Vùng danh sách có scroll */}
-            <div className="flex-1 overflow-y-auto">
-                {conversations.map((chat) => {
-                    if ("last_message" in chat && chat.conversation_type !== "group") {
-                        return (
-                            <div
-                                key={chat.conversation_id}
-                                className="flex gap-3 px-3 py-2 hover:bg-gray-100 cursor-pointer"
-                                onClick={() =>
-                                    navigate(`/chat/${chat.conversation_id}`, {
-                                        state: {
-                                            chat: chat
-                                        }
-                                    })
-                                }
-                            >
-                                <img
-                                    src={chat.other_user[0]?.avatar_url}
-                                    alt={chat.other_user[0]?.full_name}
-                                    className="w-10 h-10 rounded-full object-cover"
-                                />
-                                <div className="flex-1">
-                                    <div className="flex justify-between text-sm">
-                                        <span className="font-semibold">{chat.other_user[0]?.full_name}</span>
-                                        <span className="text-gray-400">
-                                            {new Date(chat.last_message_time).toLocaleTimeString([], {
-                                                hour: "2-digit",
-                                                minute: "2-digit"
-                                            })}
-                                        </span>
-                                    </div>
-                                    <div
-                                        className={`${
-                                            chat.unread ? "text-black font-bold text-md" : "text-gray-500 text-sm"
-                                        }`}
-                                    >
-                                        <LastMessageCF chat={chat} />
-                                    </div>
-                                </div>
-                            </div>
-                        );
-                    }
-                    if (chat.conversation_type === "group" && chat.last_message !== null) {
-                        return (
-                            <div
-                                key={chat.conversation_id}
-                                className="flex gap-3 px-3 py-2 hover:bg-gray-100 cursor-pointer"
-                                onClick={() =>
-                                    navigate(`/chat/${chat.conversation_id}`, {
-                                        state: {
-                                            chat
-                                        }
-                                    })
-                                }
-                            >
-                                <img
-                                    src={chat.group_avatar}
-                                    alt={chat.group_name}
-                                    className="w-10 h-10 rounded-full object-cover"
-                                />
-                                <div className="flex-1">
-                                    <div className="flex justify-between text-sm">
-                                        <span className="font-semibold">{chat.group_name}</span>
-                                        <span className="text-gray-400">
-                                            {new Date(chat.last_message_time).toLocaleTimeString([], {
-                                                hour: "2-digit",
-                                                minute: "2-digit"
-                                            })}
-                                        </span>
-                                    </div>
-                                    <div
-                                        className={`${
-                                            chat.unread ? "text-black font-bold text-md" : "text-gray-500 text-sm"
-                                        }`}
-                                    >
-                                        <LastMessageCF chat={chat} />
+                {/* Vùng danh sách có scroll */}
+                <div className="flex-1 overflow-y-auto">
+                    {conversations.map((chat) => {
+                        if ("last_message" in chat && chat.conversation_type !== "group") {
+                            return (
+                                <div
+                                    key={chat.conversation_id}
+                                    className="flex gap-3 px-3 py-2 hover:bg-gray-100 cursor-pointer"
+                                    onClick={() =>
+                                        navigate(`/chat/${chat.conversation_id}`, {
+                                            state: {
+                                                chat: chat
+                                            }
+                                        })
+                                    }
+                                >
+                                    <img
+                                        src={chat.other_user[0]?.avatar_url}
+                                        alt={chat.other_user[0]?.full_name}
+                                        className="w-10 h-10 rounded-full object-cover"
+                                    />
+                                    <div className="flex-1">
+                                        <div className="flex justify-between text-sm">
+                                            <span className="font-semibold">{chat.other_user[0]?.full_name}</span>
+                                            <span className="text-gray-400">
+                                                {new Date(chat.last_message_time).toLocaleTimeString([], {
+                                                    hour: "2-digit",
+                                                    minute: "2-digit"
+                                                })}
+                                            </span>
+                                        </div>
+                                        <div
+                                            className={`${
+                                                chat.unread ? "text-black font-bold text-md" : "text-gray-500 text-sm"
+                                            }`}
+                                        >
+                                            <LastMessageCF chat={chat} />
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        );
-                    }
-                })}
+                            );
+                        }
+                        if (chat.conversation_type === "group" && chat.last_message !== null) {
+                            return (
+                                <div
+                                    key={chat.conversation_id}
+                                    className="flex gap-3 px-3 py-2 hover:bg-gray-100 cursor-pointer"
+                                    onClick={() =>
+                                        navigate(`/chat/${chat.conversation_id}`, {
+                                            state: {
+                                                chat
+                                            }
+                                        })
+                                    }
+                                >
+                                    <img
+                                        src={chat.group_avatar}
+                                        alt={chat.group_name}
+                                        className="w-10 h-10 rounded-full object-cover"
+                                    />
+                                    <div className="flex-1">
+                                        <div className="flex justify-between text-sm">
+                                            <span className="font-semibold">{chat.group_name}</span>
+                                            <span className="text-gray-400">
+                                                {new Date(chat.last_message_time).toLocaleTimeString([], {
+                                                    hour: "2-digit",
+                                                    minute: "2-digit"
+                                                })}
+                                            </span>
+                                        </div>
+                                        <div
+                                            className={`${
+                                                chat.unread ? "text-black font-bold text-md" : "text-gray-500 text-sm"
+                                            }`}
+                                        >
+                                            <LastMessageCF chat={chat} />
+                                        </div>
+                                    </div>
+                                </div>
+                            );
+                        }
+                    })}
+                </div>
             </div>
-        </div>
+        </Fragment>
     );
 }
 
