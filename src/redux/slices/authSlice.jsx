@@ -163,8 +163,11 @@ export const getAllUser = createAsyncThunk("getAllUser", async () => {
 });
 
 export const getUserBySearch = createAsyncThunk("getUserBySearch", async ({ search }) => {
-    const url = `/user/getUserBySearch/${search}`;  
-    const res = await getDataApi(url); 
+    const { clientId, accessToken } = getUserCredentials();
+    const res = await getDataApi(`/user/getUserBySearch/${search}`, null, {
+        "x-client-id": clientId,
+        Authorization: accessToken
+    });
     return res.data;
 });
 
