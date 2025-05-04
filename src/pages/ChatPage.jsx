@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { useParams, useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { ClipLoader } from "react-spinners";
@@ -18,6 +18,7 @@ import {
 } from "../redux/slices/friendSlice";
 import { authSelector, socketSelector } from "../redux/selector";
 import { getConversation, getConversationMessages, fetchConversations } from "../redux/thunks/chatThunks";
+import GroupInfo from "../components/chat/GroupInfo";
 
 export default function ChatPage() {
     const dispatch = useDispatch();
@@ -25,7 +26,6 @@ export default function ChatPage() {
     const [isHidden, setIsHidden] = useState(false);
     const { isFriend, isSentRequest, isReceiveRequest } = useSelector((state) => state.friendship);
     const { conversationId } = useParams();
-    const a = useParams();
 
     const fetchMessages = useSelector((state) => state.chat.messages);
     const { user } = useSelector(authSelector);
@@ -42,6 +42,20 @@ export default function ChatPage() {
     const typingTimeoutRef = useRef(null);
     const containerRef = useRef(null);
     const messagesEndRef = useRef(null);
+    const pageRef = useRef(page);
+    const scrollRef = useRef(0);
+    const {
+        handleSendMessage,
+        handleImageUpload,
+        handleFileUpload,
+        handleMarkAsRead,
+        handleDeleteMessage,
+        handleRevokeMessage,
+        handleFowardMessage,
+        handleAddReaction,
+        handleUnreaction
+    } = useChat(conversationId, setMessages);
+    const { friendConversations, strangerConversations, groupConversations } = useSelector((state) => state.chat);
 
     const handleSendFriendRequest = (event) => {
         event.preventDefault();
@@ -75,23 +89,16 @@ export default function ChatPage() {
         }, 1000);
     };
 
-    const pageRef = useRef(page);
-    const scrollRef = useRef(0);
-    const location = useLocation();
-    const {
-        handleSendMessage,
-        handleImageUpload,
-        handleFileUpload,
-        handleMarkAsRead,
-        handleDeleteMessage,
-        handleRevokeMessage,
-        handleFowardMessage,
-        handleAddReaction,
-        handleUnreaction
-    } = useChat(conversationId, setMessages);
+    const conversations = useMemo(() => {
+        return [...friendConversations, ...strangerConversations, ...groupConversations];
+    }, [
+        JSON.stringify(friendConversations),
+        JSON.stringify(strangerConversations),
+        JSON.stringify(groupConversations)
+    ]);
 
     useEffect(() => {
-        setConversation(location.state?.chat);
+        setConversation(conversations.find((conversation) => conversation.conversation_id === conversationId));
         if (conversationId && socket) {
             dispatch(getConversationMessages({ conversationId })).then((res) => {
                 setMessages(res.payload.messages);
@@ -100,7 +107,7 @@ export default function ChatPage() {
                 dispatch(fetchConversations());
             });
         }
-    }, [socket, conversationId, dispatch]);
+    }, [socket, conversationId, dispatch, JSON.stringify(conversations)]);
 
     useEffect(() => {
         if (socket && conversationId) {
@@ -292,59 +299,70 @@ export default function ChatPage() {
 
     return (
         <div className="flex flex-col h-screen bg-white relative">
-            <div className="mt-[50px] z-50 absolute right-[50%] top-4">
+            <div className="mt-[70px] z-50 absolute right-[50%] top-4">
                 <ClipLoader color="#36d7b7" loading={loading} size={50} />
             </div>
 
-            <ChatHeader
-                otherUser={otherUser}
-                handleSendFriendRequest={handleSendFriendRequest}
-                handleUnfriendUser={handleUnfriendUser}
-                isSentRequest={isSentRequest}
-                isReceiveRequest={isReceiveRequest}
-                isFriend={isFriend}
-                handleAcceptFriendRequest={handleAcceptFriendRequest}
-                conversation={conversation}
-            />
+            <div className="flex h-screen">
+                <div className="flex flex-col h-screen flex-1">
+                    <ChatHeader
+                        otherUser={otherUser}
+                        handleSendFriendRequest={handleSendFriendRequest}
+                        handleUnfriendUser={handleUnfriendUser}
+                        isSentRequest={isSentRequest}
+                        isReceiveRequest={isReceiveRequest}
+                        isFriend={isFriend}
+                        handleAcceptFriendRequest={handleAcceptFriendRequest}
+                        conversation={conversation}
+                    />
 
-            <FriendRequest
-                selectedUser={otherUser}
-                handleSendFriendRequest={handleSendFriendRequest}
-                handleCancelFriendRequest={handleCancelFriendRequest}
-                isFriend={isFriend}
-                isSentRequest={isSentRequest}
-                isReceiveRequest={isReceiveRequest}
-                handleAcceptFriendRequest={handleAcceptFriendRequest}
-                conversation={conversation}
-            />
+                    <FriendRequest
+                        selectedUser={otherUser}
+                        handleSendFriendRequest={handleSendFriendRequest}
+                        handleCancelFriendRequest={handleCancelFriendRequest}
+                        isFriend={isFriend}
+                        isSentRequest={isSentRequest}
+                        isReceiveRequest={isReceiveRequest}
+                        handleAcceptFriendRequest={handleAcceptFriendRequest}
+                        conversation={conversation}
+                    />
 
-            <MessageList
-                messages={messages}
-                user={user}
-                containerRef={containerRef}
-                messagesEndRef={messagesEndRef}
-                loadMoreMessages={loadMoreMessages}
-                otherUser={otherUser}
-                conversation={conversation}
-                handleDeleteMessage={handleDeleteMessage}
-                handleRevokeMessage={handleRevokeMessage}
-                handleFowardMessage={handleFowardMessage}
-                handleAddReaction={handleAddReaction}
-                handleUnreaction={handleUnreaction}
-            />
-            {isTyping && userTyping._id !== user?._id && (
-                <div className="italic text-sm text-gray-500 px-2 py-1 z-50">
-                    {userTyping.full_name} đang nhập tin nhắn ...
+                    <MessageList
+                        messages={messages}
+                        user={user}
+                        containerRef={containerRef}
+                        messagesEndRef={messagesEndRef}
+                        loadMoreMessages={loadMoreMessages}
+                        otherUser={otherUser}
+                        conversation={conversation}
+                        handleDeleteMessage={handleDeleteMessage}
+                        handleRevokeMessage={handleRevokeMessage}
+                        handleFowardMessage={handleFowardMessage}
+                        handleAddReaction={handleAddReaction}
+                        handleUnreaction={handleUnreaction}
+                    />
+
+                    {isTyping && userTyping._id !== user?._id && (
+                        <div className="italic text-sm text-gray-500 px-2 py-1 z-50">
+                            {userTyping.full_name} đang nhập tin nhắn ...
+                        </div>
+                    )}
+                    <MessageInput
+                        onSendMessage={handleSendMessage}
+                        onImageUpload={handleImageUpload}
+                        onFileUpload={handleFileUpload}
+                        socket={socket}
+                        user={user}
+                        conversation={conversation}
+                    />
                 </div>
-            )}
-            <MessageInput
-                onSendMessage={handleSendMessage}
-                onImageUpload={handleImageUpload}
-                onFileUpload={handleFileUpload}
-                socket={socket}
-                user={user}
-                conversationId={conversationId}
-            />
+
+                {conversation && conversation.conversation_type === "group" && (
+                    <div>
+                        <GroupInfo conversation={conversation} authUser={user} />
+                    </div>
+                )}
+            </div>
         </div>
     );
 }

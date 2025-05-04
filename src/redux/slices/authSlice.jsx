@@ -10,7 +10,7 @@ const initialState = {
         otpToken: null
     },
     temporaryPassword: null,
-    allUsers: [] 
+    allUsers: []
 };
 
 export const signUp = createAsyncThunk("signUp", async ({ phone, password }) => {
@@ -158,16 +158,24 @@ export const setPassword = createAsyncThunk("setPassword", async ({ newPassword,
 });
 
 export const getAllUser = createAsyncThunk("getAllUser", async () => {
-    const res = await getDataApi("/user/getAllUser"); 
+    const res = await getDataApi("/user/getAllUser");
     return res.data;
 });
 
-export const getUserBySearch = createAsyncThunk("getUserBySearch", async ({ search }) => {
-    const url = `/user/getUserBySearch/${search}`;  
-    const res = await getDataApi(url); 
+export const getUserBySearch = createAsyncThunk("getUserBySearch", async ({ search, forGroup }) => {
+    const { clientId, accessToken } = getUserCredentials();
+    const res = await getDataApi(
+        `/user/getUserBySearch/${search}`,
+        {
+            forGroup
+        },
+        {
+            "x-client-id": clientId,
+            Authorization: accessToken
+        }
+    );
     return res.data;
 });
-
 
 const authSlice = createSlice({
     name: "auth",
@@ -201,8 +209,8 @@ const authSlice = createSlice({
                 const { tokens, user } = action.payload?.metadata;
                 state.tokens = tokens;
                 state.user = user;
-                localStorage.setItem("refreshToken", tokens.refreshToken);
-                localStorage.setItem("accessToken", tokens.accessToken);
+                localStorage.setItem("refreshToken", tokens?.refreshToken);
+                localStorage.setItem("accessToken", tokens?.accessToken);
                 localStorage.setItem("clientId", user._id);
             })
             .addCase(editProfile.fulfilled, (state, action) => {

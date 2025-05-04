@@ -2,12 +2,13 @@ import { useState, useEffect } from "react";
 import { Search, ChevronDown, MoreHorizontal, Users } from "lucide-react";
 import { getFriendList } from "../redux/slices/friendSlice";
 import { useDispatch, useSelector } from "react-redux";
-import Avatar from "../components/user/Avatar";
+import Account from "../components/user/Account";
+import { authSelector } from "../redux/selector";
 
 export default function ListFriendScreen() {
     const [searchTerm, setSearchTerm] = useState("");
     const dispatch = useDispatch();
-
+    const { user } = useSelector(authSelector);
     const { friendList } = useSelector((state) => state.friendship);
 
     useEffect(() => {
@@ -81,20 +82,7 @@ export default function ListFriendScreen() {
                                     </div>
 
                                     {groupedContacts[group].map((friend) => (
-                                        <div
-                                            key={friend._id}
-                                            className="flex items-center px-4 py-3 border-b border-gray-200 hover:bg-gray-50"
-                                        >
-                                            <div className="flex-shrink-0 h-10 w-10 rounded-full overflow-hidden">
-                                                <Avatar src={friend.avatar_url} alt={friend.full_name} size={40} />
-                                            </div>
-                                            <div className="ml-3 flex-grow">
-                                                <p className="text-sm font-medium text-gray-900">{friend.full_name}</p>
-                                            </div>
-                                            <button className="p-1 rounded-full hover:bg-gray-200">
-                                                <MoreHorizontal className="h-5 w-5 text-gray-200" />
-                                            </button>
-                                        </div>
+                                        <Account key={friend._id} user={friend} authUser={user} />
                                     ))}
                                 </div>
                             ))}

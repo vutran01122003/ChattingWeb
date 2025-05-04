@@ -1,8 +1,12 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import defaultAvatar from "../../assets/images/user/default-avatar.jpg";
 
 const Avatar = ({ src, alt = "Avatar", size = 44 }) => {
     const [imgSrc, setImgSrc] = useState(src || defaultAvatar);
+
+    useEffect(() => {
+        setImgSrc(src || defaultAvatar);
+    }, [src]);
 
     const sizeStyle = {
         width: `${size}px`,

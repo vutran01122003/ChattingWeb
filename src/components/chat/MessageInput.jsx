@@ -11,12 +11,10 @@ import FilePopup from "./FilePopup";
 
 import { authSelector } from "../../redux/selector";
 
-
-export default function MessageInput({ onSendMessage, onImageUpload, onFileUpload, socket, conversationId }) {
+export default function MessageInput({ onSendMessage, onImageUpload, onFileUpload, socket, conversation, user }) {
     const [message, setMessage] = useState("");
     const [showStickerPopup, setShowStickerPopup] = useState(false);
     const [showFilePopup, setShowFilePopup] = useState(false);
-    const { user } = useSelector(authSelector);
     const textareaRef = useRef(null);
     const fileInputRef = useRef(null);
     const imageInputRef = useRef(null);
@@ -50,26 +48,27 @@ export default function MessageInput({ onSendMessage, onImageUpload, onFileUploa
     };
 
     const handleSendMessage = () => {
-        if (message.trim()) {
-            onSendMessage(message);
-            setMessage("");
-            if (textareaRef.current) {
-                textareaRef.current.style.height = "auto";
+        if (conversation.allow_send_message || [...conversation.admin, ...conversation.sub_admin].includes(user._id))
+            if (message.trim()) {
+                onSendMessage(message);
+                setMessage("");
+                if (textareaRef.current) {
+                    textareaRef.current.style.height = "auto";
+                }
             }
-        }
     };
 
     const handleTyping = () => {
-        if (!socket || !user || !conversationId) return;
+        if (!socket || !user || !conversation.conversation_id) return;
         socket.emit("typing", {
             user,
-            conversation_id: conversationId
+            conversation_id: conversation.conversation_id
         });
 
         if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
 
         typingTimeoutRef.current = setTimeout(() => {
-            socket.emit("stop_typing", { conversation_id: conversationId });
+            socket.emit("stop_typing", { conversation_id: conversation.conversation_id });
         }, 1000);
     };
 
@@ -91,11 +90,18 @@ export default function MessageInput({ onSendMessage, onImageUpload, onFileUploa
         setShowStickerPopup(false);
     };
 
-    
-   
     return (
         <div className="border-t border-gray-300 p-2 flex items-center relative">
-            <div className="flex space-x-2 mr-2">
+            <div
+                className={`flex space-x-2 mr-2 ${
+                    !conversation?.allow_send_message &&
+                    conversation?.admin &&
+                    conversation?.sub_admin &&
+                    ![...conversation.admin, ...conversation.sub_admin].includes(user._id)
+                        ? "pointer-events-none"
+                        : ""
+                }`}
+            >
                 {/* Sticker button with popup */}
                 <div className="relative popup-container">
                     <button
@@ -153,12 +159,34 @@ export default function MessageInput({ onSendMessage, onImageUpload, onFileUploa
                 onChange={handleChangeMessage}
                 onKeyDown={handleKeyDown}
                 placeholder="Type your message..."
-                className="flex-1 px-4 py-2 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none overflow-hidden"
+                className={`flex-1 px-4 py-2 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none overflow-hidden ${
+                    !conversation?.allow_send_message &&
+                    conversation?.admin &&
+                    conversation?.sub_admin &&
+                    ![...conversation.admin, ...conversation.sub_admin].includes(user._id)
+                        ? "cursor-not-allowed"
+                        : ""
+                }`}
                 rows={1}
                 ref={textareaRef}
+                readOnly={
+                    !conversation?.allow_send_message &&
+                    conversation?.admin &&
+                    conversation?.sub_admin &&
+                    ![...conversation.admin, ...conversation.sub_admin].includes(user._id)
+                }
             />
 
-            <div className="flex ml-2">
+            <div
+                className={`flex ml-2 ${
+                    !conversation?.allow_send_message &&
+                    conversation?.admin &&
+                    conversation?.sub_admin &&
+                    ![...conversation.admin, ...conversation.sub_admin].includes(user._id)
+                        ? "pointer-events-none"
+                        : ""
+                }`}
+            >
                 <button className="p-2">
                     <FaRegSmile className="h-6 w-6 text-black" />
                 </button>
