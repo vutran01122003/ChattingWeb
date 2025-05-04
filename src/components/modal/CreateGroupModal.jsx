@@ -8,22 +8,26 @@ import Avatar from "../user/Avatar";
 import { createConversation } from "../../redux/thunks/chatThunks";
 import { MdDeleteOutline } from "react-icons/md";
 import { getUserBySearch } from "../../redux/slices/authSlice";
+import { socketSelector } from "../../redux/selector";
 
-function CreateGroupModal({ handleToggleDisplayCreateGroupModal }) {
-    const dispatch = useDispatch();
-    const fileRef = useRef();
-    const [groupName, setGroupName] = useState("");
-    const [keyword, setKeyWord] = useState("");
-    const [selected, setSelected] = useState([]);
-    const [file, setFile] = useState("");
-    const { friendList } = useSelector((state) => state.friendship);
-
-    const groupedContacts = friendList.reduce((acc, contact) => {
+const sortByTheFirstLetter = (arr) => {
+    return arr.reduce((acc, contact) => {
         const firstLetter = contact.full_name.split("")[0];
         if (!acc[firstLetter]) acc[firstLetter] = [];
         acc[firstLetter].push(contact);
         return acc;
     }, {});
+};
+function CreateGroupModal({ handleToggleDisplayCreateGroupModal }) {
+    const dispatch = useDispatch();
+    const socket = useSelector(socketSelector);
+    const fileRef = useRef();
+    const [groupName, setGroupName] = useState("");
+    const [keyword, setKeyWord] = useState("");
+    const [selected, setSelected] = useState([]);
+    const [file, setFile] = useState("");
+    const friendship = useSelector((state) => state.friendship);
+    const [groupedContacts, setgroupedContacts] = useState([]);
 
     const toggleSelect = (name) => {
         setSelected((prev) => (prev.includes(name) ? prev.filter((n) => n !== name) : [...prev, name]));
@@ -44,10 +48,11 @@ function CreateGroupModal({ handleToggleDisplayCreateGroupModal }) {
         data.append("otherUserId", JSON.stringify(selected));
         data.append("file", file);
 
-        dispatch(createConversation(data));
-
-        resetData();
-        handleToggleDisplayCreateGroupModal();
+        dispatch(createConversation(data)).then((data) => {
+            resetData();
+            handleToggleDisplayCreateGroupModal();
+            socket.emit("create_conversation", data.payload);
+        });
     };
 
     useEffect(() => {
@@ -55,12 +60,22 @@ function CreateGroupModal({ handleToggleDisplayCreateGroupModal }) {
     }, []);
 
     useEffect(() => {
-        const timerId = setTimeout(() => {
-            dispatch(getUserBySearch(keyword));
-        }, 500);
+        setgroupedContacts(sortByTheFirstLetter(friendship.friendList));
+    }, [JSON.stringify(friendship.friendList)]);
+
+    useEffect(() => {
+        let timerId = null;
+        if (keyword) {
+            timerId = setTimeout(() => {
+                dispatch(getUserBySearch({ search: keyword, forGroup: true })).then((data) => {
+                    if (data?.error) setgroupedContacts({});
+                    else setgroupedContacts(sortByTheFirstLetter(data.payload.metadata));
+                });
+            }, 500);
+        } else setgroupedContacts(sortByTheFirstLetter(friendship.friendList));
 
         return () => {
-            clearTimeout(timerId);
+            if (timerId) clearTimeout(timerId);
         };
     }, [keyword]);
 
@@ -150,7 +165,11 @@ function CreateGroupModal({ handleToggleDisplayCreateGroupModal }) {
                 </div>
 
                 <div className="flex justify-end gap-2 mt-4">
-                    <button variant="outline" className="h-10 w-22 rounded-sm bg-gray-300 font-semibold cursor-pointer">
+                    <button
+                        variant="outline"
+                        className="h-10 w-22 rounded-sm bg-gray-300 font-semibold cursor-pointer"
+                        onClick={handleToggleDisplayCreateGroupModal}
+                    >
                         Hủy
                     </button>
                     <button

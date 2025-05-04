@@ -45,7 +45,7 @@ instance.interceptors.response.use(
         const originalRequest = error.config;
         const { refreshToken, clientId } = getUserCredentials();
 
-        if (error.response.status === 401 && !originalRequest._retry && refreshToken && clientId) {
+        if (error.response?.status === 401 && !originalRequest._retry && refreshToken && clientId) {
             originalRequest._retry = true;
 
             try {

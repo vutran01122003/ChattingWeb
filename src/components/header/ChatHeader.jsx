@@ -63,7 +63,7 @@ export default function ChatHeader({
                     />
                     <div className="ml-3">
                         <h2 className="font-semibold text-lg">{otherUser[0].full_name}</h2>
-                        {conversation.conversation_type === "stranger" ? (
+                        {conversation?.conversation_type === "stranger" ? (
                             <div className="text-white w-20 h-3 rounded-md bg-gray-300 p-3 flex items-center text-xs justify-center">
                                 NGƯỜI LẠ
                             </div>
