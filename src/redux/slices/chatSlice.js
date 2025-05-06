@@ -81,10 +81,13 @@ const chatSlice = createSlice({
                 );
                 if (index !== -1) state.strangerConversations[index] = newConv;
             } else {
+                console.log("ok");
                 const index = state.groupConversations.findIndex(
                     (conversation) => conversation.conversation_id === newConv.conversation_id
                 );
+                console.log(index);
                 if (index !== -1) state.groupConversations[index] = newConv;
+                console.log([...state.groupConversations])
             }
         },
         removeConversation: (state, action) => {

@@ -18,6 +18,7 @@ const sortByTheFirstLetter = (arr) => {
         return acc;
     }, {});
 };
+
 function CreateGroupModal({ handleToggleDisplayCreateGroupModal }) {
     const dispatch = useDispatch();
     const socket = useSelector(socketSelector);

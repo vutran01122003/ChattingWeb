@@ -15,7 +15,8 @@ export default function ChatHeader({
     isSentRequest,
     isReceiveRequest,
     handleAcceptFriendRequest,
-    conversation
+    conversation,
+    handleToggleVisibleGroupInfo
 }) {
     const dispatch = useDispatch();
     const auth = useSelector(authSelector);
@@ -137,7 +138,7 @@ export default function ChatHeader({
                     </Fragment>
                 )}
 
-                <button className="p-2">
+                <button className="p-2" onClick={handleToggleVisibleGroupInfo}>
                     <BsLayoutSidebarReverse className="h-6 w-6 text-gray-500 cursor-pointer" />
                 </button>
             </div>

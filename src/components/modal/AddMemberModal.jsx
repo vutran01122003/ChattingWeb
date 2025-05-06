@@ -40,7 +40,8 @@ function AddMemberModal({ handleToggleVisibleAddMemberModal, otherUser, conversa
             handleToggleVisibleAddMemberModal();
             socket.emit("update_conversation_members", {
                 ...res.payload,
-                status
+                status,
+                newUserIdList: selected
             });
         });
     };

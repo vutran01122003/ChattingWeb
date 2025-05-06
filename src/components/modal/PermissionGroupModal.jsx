@@ -88,7 +88,7 @@ function PermissionGroupModal({ users, handleTogglePermisionModal, conversation,
                     <div className="mb-3 w-full max-h-[200px] pr-2 overflow-auto">
                         <h3 className="font-semibold mb-2">Danh sách phó nhóm</h3>
                         <div>
-                            {users.map((user) => {
+                            {users && users.map((user) => {
                                 if (conversation.sub_admin.includes(user._id))
                                     return (
                                         <div key={user._id} className="flex items-center gap-3 mb-3">
