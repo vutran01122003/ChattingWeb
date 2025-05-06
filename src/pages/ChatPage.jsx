@@ -30,6 +30,7 @@ export default function ChatPage() {
     const fetchMessages = useSelector((state) => state.chat.messages);
     const { user } = useSelector(authSelector);
     const [messages, setMessages] = useState(fetchMessages);
+    const [visibleGroupInfo, setVisibleGroupInfo] = useState(true);
     const [otherUser, setOtherUser] = useState(null);
     const [page, setPage] = useState(1);
     const [loading, setLoading] = useState(true);
@@ -65,6 +66,10 @@ export default function ChatPage() {
             dispatch(checkSendFriendRequest({ friendId: otherUser[0]._id }));
         }, 1000);
     };
+
+    const handleToggleVisibleGroupInfo = () => {
+        setVisibleGroupInfo(prev => !prev);
+    }
 
     const handleAcceptFriendRequest = (event) => {
         event.preventDefault();
@@ -314,6 +319,7 @@ export default function ChatPage() {
                         isFriend={isFriend}
                         handleAcceptFriendRequest={handleAcceptFriendRequest}
                         conversation={conversation}
+                        handleToggleVisibleGroupInfo={handleToggleVisibleGroupInfo}
                     />
 
                     <FriendRequest
@@ -357,7 +363,7 @@ export default function ChatPage() {
                     />
                 </div>
 
-                {conversation && conversation.conversation_type === "group" && (
+                {visibleGroupInfo && conversation && conversation.conversation_type === "group" && (
                     <div>
                         <GroupInfo conversation={conversation} authUser={user} />
                     </div>

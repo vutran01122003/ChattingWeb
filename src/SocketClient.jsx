@@ -35,15 +35,22 @@ function SocketClient({ auth }) {
 
             const updateConversationMembersHandler = (data) => {
                 if (data.status === "add-members") {
-                    dispatch(addConversation(data));
+                    if(data.newUserIdList.includes(auth.user._id)) dispatch(addConversation(data));
+                    else dispatch(updateConv(data));
                 } else {
-                    if (auth.user._id === data.removedUser._id) dispatch(removeConversation(data));
+                    if (auth.user._id === data.removedUser._id) {
+                        window.location.href = "/";
+                        dispatch(removeConversation(data));
+                    }
                     else dispatch(updateConv(data));
                 }
             };
 
             const updateConversationHandler = (data) => {
-                if (data.delete_group) if (pathname.split("/")[2] === data.conversation_id) window.location.href = "/";
+                console.log(data);
+                if (data.delete_group) {
+                    if (pathname.split("/")[2] === data.conversation_id) window.location.href = "/";
+                }
                 dispatch(updateConv(data));
             };
 

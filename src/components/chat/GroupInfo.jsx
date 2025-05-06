@@ -153,14 +153,14 @@ const GroupInfo = ({ conversation, authUser }) => {
             {visibleAddMemberModal && (
                 <AddMemberModal
                     handleToggleVisibleAddMemberModal={handleToggleVisibleAddMemberModal}
-                    otherUser={conversation.other_user}
+                    otherUser={conversation.participants.filter((participant) => participant._id !== authUser._id)}
                     conversation={conversation}
                 />
             )}
 
             {visiblePermissionModal && (
                 <PermissionGroupModal
-                    users={conversation.other_user}
+                    otherUser={conversation.participants.filter((participant) => participant._id !== authUser._id)}
                     handleTogglePermisionModal={handleTogglePermisionModal}
                     conversation={conversation}
                 />
@@ -193,14 +193,7 @@ const GroupInfo = ({ conversation, authUser }) => {
 
                 {visibleMemberList && (
                     <div>
-                        <Account
-                            key={authUser._id}
-                            user={authUser}
-                            authUser={authUser}
-                            group={true}
-                            conversation={conversation}
-                        />
-                        {conversation.other_user.map((user) => (
+                        {conversation.participants.map((user) => (
                             <Account
                                 key={user._id}
                                 user={user}
@@ -328,7 +321,7 @@ const GroupInfo = ({ conversation, authUser }) => {
                                 <span className="ml-2">
                                     <FiUsers size={16} />
                                 </span>
-                                <span className="ml-2">{`${conversation?.other_user.length + 1} thành viên`}</span>
+                                <span className="ml-2">{`${conversation?.participants.length} thành viên`}</span>
                             </div>
                         </div>
 
