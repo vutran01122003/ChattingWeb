@@ -20,6 +20,7 @@ import FriendRequestsScreen from "./pages/FriendRequestsScreen";
 import ListFriendScreen from "./pages/ListFriendScreen";
 import { postDataApi } from "./utils/fetchData";
 import { getUserCredentials } from "./utils";
+import ListGroupsScreen from "./pages/ListGroupsScreen";
 
 function App() {
     const dispatch = useDispatch();
@@ -77,6 +78,7 @@ function App() {
                     <Route index element={<HomePage />} />
                     <Route path="friend-request" element={<FriendRequestsScreen />} />
                     <Route path="list-friend" element={<ListFriendScreen />} />
+                    <Route path="list-group" element={<ListGroupsScreen />} />
                     <Route path="/chat/:conversationId" element={<ChatPage />} />
                     <Route path="*" element={<NotfoundPage />} />
                 </Route>

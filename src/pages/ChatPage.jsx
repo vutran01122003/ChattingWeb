@@ -9,12 +9,14 @@ import MessageInput from "../components/chat/MessageInput";
 import useChat from "../hooks/useChat";
 import FriendRequest from "../components/chat/FriendRequest";
 import {
+    checkFriendShip,
     sendFriendRequest,
     checkSendFriendRequest,
     cancelFriendRequest,
-    checkFriendShip,
+    acceptFriendRequest,
+    checkReceiveFriendRequest,
     unfriendUser,
-    acceptFriendRequest
+    resetFriendshipState
 } from "../redux/slices/friendSlice";
 import { authSelector, socketSelector } from "../redux/selector";
 import { getConversation, getConversationMessages, fetchConversations } from "../redux/thunks/chatThunks";
@@ -58,40 +60,135 @@ export default function ChatPage() {
     } = useChat(conversationId, setMessages);
     const { friendConversations, strangerConversations, groupConversations } = useSelector((state) => state.chat);
 
-    const handleSendFriendRequest = (event) => {
-        event.preventDefault();
-        dispatch(sendFriendRequest({ friendId: otherUser[0]._id }));
+    const loadFriendshipStatus = () => {
+        if (!otherUser[0]?._id) {
+            console.warn(`selectedUser không hợp lệ:`, otherUser);
+            return;
+        }
+        if (!user?._id) {
+            console.error(`clientId không hợp lệ khi tải trạng thái:`, user);
+            return;
+        }
+        dispatch(checkFriendShip({ friendId: otherUser[0]._id }));
+        dispatch(checkSendFriendRequest({ friendId: otherUser[0]._id }));
+        dispatch(checkReceiveFriendRequest({ friendId: otherUser[0]._id }));
+    };
 
-        setTimeout(() => {
-            dispatch(checkSendFriendRequest({ friendId: otherUser[0]._id }));
-        }, 1000);
+    useEffect(() => {
+        if (!user) {
+            console.error(`clientId không hợp lệ:`, user);
+            return;
+        }
+        if (otherUser) {
+            loadFriendshipStatus();
+            if (socket?.connected) {
+                if (!otherUser.conversationId) {
+                    console.warn(`conversationId không hợp lệ cho selectedUser: ${otherUser[0]._id}`);
+                } else {
+                    socket.emit("join_conversation", otherUser.conversationId);
+                }
+            } else {
+                console.warn(`Socket chưa kết nối cho user ${user._id}`);
+            }
+        } else {
+            dispatch(resetFriendshipState());
+        }
+    }, [otherUser, dispatch, socket, user]);
+
+    useEffect(() => {
+        if (!socket || !user) {
+            console.warn(`Socket hoặc clientId không hợp lệ: socket=${!!socket}, clientId=${user?._id}`);
+            return;
+        }
+
+
+        const handleReceiveFriendRequest = (data) => {
+            if (!data.fromUserId || !data.toUserId) {
+                console.error(`Dữ liệu receive_friend_request không hợp lệ:`, data);
+                return;
+            }
+        };
+
+        const handleSocketRefresh = (data) => {
+            if (!otherUser[0]?._id) {
+                console.warn(`Không có selectedUser để xử lý socket refresh`);
+                return;
+            }
+            if (
+                (data.fromUserId === user._id || data.toUserId === otherUser[0]._id)
+            ) {
+                loadFriendshipStatus();
+            }
+        };
+
+        socket.on("connect", () => {
+            socket.emit("connected_user", user._id);
+        });
+
+        socket.on("connect_error", (error) => {
+            console.error(`Lỗi kết nối socket:`, error);
+        });
+
+        socket.on("receive_friend_request", handleReceiveFriendRequest);
+        socket.on("friend_request_canceled", handleSocketRefresh);
+        socket.on("friend_request_declined", handleSocketRefresh);
+        socket.on("friend_request_accepted", handleSocketRefresh);
+        socket.on("friend_request_accept_success", handleSocketRefresh);
+        socket.on("user_unfriended", handleSocketRefresh);
+
+
+        return () => {
+            socket.off("connect");
+            socket.off("connect_error");
+            socket.off("receive_friend_request", handleReceiveFriendRequest);
+            socket.off("friend_request_canceled", handleSocketRefresh);
+            socket.off("friend_request_declined", handleSocketRefresh);
+            socket.off("friend_request_accepted", handleSocketRefresh);
+            socket.off("friend_request_accept_success", handleSocketRefresh);
+            socket.off("user_unfriended", handleSocketRefresh);
+        };
+    }, [socket, user, otherUser, dispatch]);
+
+    const handleSendFriendRequest = (e) => {
+        e.preventDefault();
+        if (!otherUser[0]._id) {
+            console.error(`Không có ID người dùng để gửi yêu cầu kết bạn.`);
+            return;
+        }
+        dispatch(sendFriendRequest({ friendId: otherUser[0]._id, socket }));
     };
 
     const handleToggleVisibleGroupInfo = () => {
         setVisibleGroupInfo(prev => !prev);
     }
 
-    const handleAcceptFriendRequest = (event) => {
-        event.preventDefault();
-        dispatch(acceptFriendRequest({ receiverId: otherUser[0]._id }));
+    const handleAcceptFriendRequest = (e) => {
+        e.preventDefault();
+        if (!otherUser[0]?._id || !user?._id) {
+            console.error(`selectedUser._id hoặc clientId không hợp lệ để chấp nhận yêu cầu kết bạn: selectedUser=${otherUser}, clientId=${user._id}`);
+            return;
+        }
+        dispatch(acceptFriendRequest({ receiverId: otherUser[0]._id, socket }));
     };
 
-    const handleCancelFriendRequest = (event) => {
-        event.preventDefault();
-        dispatch(cancelFriendRequest({ friendId: otherUser[0]._id }));
 
-        setTimeout(() => {
-            dispatch(checkSendFriendRequest({ friendId: otherUser[0]._id }));
-        }, 1000);
+    const handleCancelFriendRequest = (e) => {
+        e.preventDefault();
+        if (!otherUser[0]?._id || !user?._id) {
+            console.error(`selectedUser._id hoặc clientId không hợp lệ để hủy yêu cầu kết bạn: selectedUser=${otherUser[0]._id}, clientId=${user._id }`);
+            return;
+        }
+        dispatch(cancelFriendRequest({ friendId: otherUser[0]._id, socket }));
     };
 
-    const handleUnfriendUser = (event) => {
-        event.preventDefault();
-        dispatch(unfriendUser({ friendId: otherUser[0]._id }));
 
-        setTimeout(() => {
-            dispatch(checkFriendShip({ friendId: otherUser[0]._id }));
-        }, 1000);
+    const handleUnfriendUser = (e) => {
+        e.preventDefault();
+        if (!otherUser[0]?._id || !user?._id) {
+            console.error(`selectedUser._id hoặc clientId không hợp lệ để hủy yêu cầu kết bạn: selectedUser=${otherUser[0]._id}, clientId=${user._id }`);
+            return;
+        }
+        dispatch(unfriendUser({ friendId:  otherUser[0]._id, socket }));
     };
 
     const conversations = useMemo(() => {

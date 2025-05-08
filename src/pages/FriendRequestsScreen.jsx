@@ -8,9 +8,13 @@ import {
   declineFriendRequest
 } from "../redux/slices/friendSlice";
 import { MessageCircle, UserPlus } from "lucide-react";
+import { socketSelector } from "../redux/selector";
+import { getUserCredentials } from "../utils";
 
 export default function FriendRequestsPage() {
   const dispatch = useDispatch();
+  const socket = useSelector(socketSelector);
+  const { clientId } = getUserCredentials();
 
   const { receivedRequests, sentRequests } = useSelector(
     (state) => state.friendship
@@ -21,20 +25,57 @@ export default function FriendRequestsPage() {
     dispatch(getSentFriendRequests());
   }, [dispatch]);
 
+  useEffect(() => {
+    if (!socket || !clientId) return;
+
+    const refreshRequests = () => {
+      dispatch(getReceivedFriendRequests());
+      dispatch(getSentFriendRequests());
+    };
+
+    socket.on("receive_friend_request", (data) => {
+      if (data.toUserId === clientId) refreshRequests();
+    });
+
+    socket.on("friend_request_declined", (data) => {
+      if (data.fromUserId === clientId) refreshRequests();
+    });
+
+    socket.on("friend_request_canceled", (data) => {
+      if (data.fromUserId === clientId) refreshRequests();
+    });
+
+    socket.on("friend_request_accepted", (data) => {
+      if (data.fromUserId === clientId) refreshRequests();
+    });
+
+    socket.on("friend_request_accept_success", (data) => {
+      if (data.toUserId === clientId) refreshRequests();
+    });
+
+    return () => {
+      socket.off("receive_friend_request");
+      socket.off("friend_request_declined");
+      socket.off("friend_request_canceled");
+      socket.off("friend_request_accepted");
+      socket.off("friend_request_accept_success");
+    };
+  }, [socket, clientId, dispatch]);
+
   const handleAccept = (id) => {
-    dispatch(acceptFriendRequest({ receiverId: id })).then(() => {
+    dispatch(acceptFriendRequest({ receiverId: id, socket })).then(() => {
       dispatch(getReceivedFriendRequests());
     });
   };
 
   const handleCancel = (id) => {
-    dispatch(cancelFriendRequest({ friendId: id })).then(() => {
+    dispatch(cancelFriendRequest({ friendId: id, socket })).then(() => {
       dispatch(getSentFriendRequests());
     });
   };
 
   const handleDecline = (id) => {
-    dispatch(declineFriendRequest({ friendId: id })).then(() => {
+    dispatch(declineFriendRequest({ friendId: id, socket })).then(() => {
       dispatch(getReceivedFriendRequests());
     });
   }
