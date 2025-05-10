@@ -13,17 +13,18 @@ export default function SidebarContact() {
         },
         {
             icon: <Users className="w-5 h-5" />,
-            text: "Danh sách nhóm và cộng đồng"
+            text: "Danh sách nhóm và cộng đồng",
+            url : "/list-group"
         },
         {
             icon: <UserPlus className="w-5 h-5" />,
             text: "Lời mời kết bạn",
             url: "/friend-request"
         },
-        {
-            icon: <UsersRound className="w-5 h-5" />,
-            text: "Lời mời vào nhóm và cộng đồng"
-        }
+        // {
+        //     icon: <UsersRound className="w-5 h-5" />,
+        //     text: "Lời mời vào nhóm và cộng đồng"
+        // }
     ];
 
     return (

@@ -4,16 +4,59 @@ import { getFriendList } from "../redux/slices/friendSlice";
 import { useDispatch, useSelector } from "react-redux";
 import Account from "../components/user/Account";
 import { authSelector } from "../redux/selector";
+import { socketSelector } from "../redux/selector";
 
 export default function ListFriendScreen() {
     const [searchTerm, setSearchTerm] = useState("");
     const dispatch = useDispatch();
     const { user } = useSelector(authSelector);
     const { friendList } = useSelector((state) => state.friendship);
+    const socket = useSelector(socketSelector);
 
     useEffect(() => {
         dispatch(getFriendList());
     }, []);
+
+    useEffect(() => {
+        if (!socket || !user._id) {
+            console.warn(`Socket hoặc clientId không hợp lệ: socket=${!!socket}, clientId=${user._id}`);
+            return;
+        }
+
+        const handleSocketRefresh = (data) => {
+
+            if (data.fromUserId || data.toUserId) {
+                dispatch(getFriendList());
+            } else {
+                console.log(`Sự kiện socket không liên quan đến danh sách bạn bè`);
+            }
+        };
+
+        const handleUserUnfriended = (data) => {
+            handleSocketRefresh(data);
+        };
+
+        socket.on("connect", () => {
+            socket.emit("connected_user", user._id);
+        });
+
+        socket.on("connect_error", (error) => {
+            console.error(`Lỗi kết nối socket trong ListFriendScreen:`, error);
+        });
+
+        socket.on("friend_request_accepted", handleSocketRefresh);
+        socket.on("friend_request_accept_success", handleSocketRefresh);
+        socket.on("user_unfriended", handleUserUnfriended);
+
+
+        return () => {
+            socket.off("connect");
+            socket.off("connect_error");
+            socket.off("friend_request_accepted", handleSocketRefresh);
+            socket.off("friend_request_accept_success", handleSocketRefresh);
+            socket.off("user_unfriended", handleUserUnfriended);
+        };
+    }, [socket, user, dispatch]);
 
     const filteredContacts = friendList.filter((friend) =>
         friend.full_name.toLowerCase().includes(searchTerm.toLowerCase())
