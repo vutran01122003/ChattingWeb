@@ -48,6 +48,11 @@ instance.interceptors.response.use(
         if (error.response?.status === 401 && !originalRequest._retry && refreshToken && clientId) {
             originalRequest._retry = true;
 
+            if (localStorage.getItem("changed")) {
+                localStorage.removeItem("changed");
+                return originalRequest;
+            }
+
             try {
                 const response = await instance.post(
                     "/auth/refresh-token",

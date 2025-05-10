@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { io } from "socket.io-client";
 import { useDispatch } from "react-redux";
 import { delSocket, getUsersOnline, setSocket } from "./redux/slices/socketSlice";
-import { getUserCredentials } from "./utils";
+import { getUserCredentials, removeUserCredentials } from "./utils";
 import { addConversation, removeConversation, updateConv } from "./redux/slices/chatSlice";
 import { useLocation } from "react-router";
 
@@ -35,23 +35,28 @@ function SocketClient({ auth }) {
 
             const updateConversationMembersHandler = (data) => {
                 if (data.status === "add-members") {
-                    if(data.newUserIdList.includes(auth.user._id)) dispatch(addConversation(data));
+                    if (data.newUserIdList.includes(auth.user._id)) dispatch(addConversation(data));
                     else dispatch(updateConv(data));
                 } else {
                     if (auth.user._id === data.removedUser._id) {
                         window.location.href = "/";
                         dispatch(removeConversation(data));
-                    }
-                    else dispatch(updateConv(data));
+                    } else dispatch(updateConv(data));
                 }
             };
 
             const updateConversationHandler = (data) => {
-                console.log(data);
                 if (data.delete_group) {
                     if (pathname.split("/")[2] === data.conversation_id) window.location.href = "/";
                 }
                 dispatch(updateConv(data));
+            };
+
+            const changePasswordHandler = () => {
+                removeUserCredentials();
+                localStorage.setItem("changed", true);
+                alert("Mật khẩu đã được đổi");
+                window.location.reload();
             };
 
             socket.on("connect", connectSocketHandler);
@@ -59,6 +64,7 @@ function SocketClient({ auth }) {
             socket.on("create_conversation", createConversationHandler);
             socket.on("update_conversation_members", updateConversationMembersHandler);
             socket.on("update_conversation", updateConversationHandler);
+            socket.on("change_password", changePasswordHandler);
 
             return () => {
                 if (socket) {
@@ -69,6 +75,7 @@ function SocketClient({ auth }) {
                     socket.off("create_conversation", createConversationHandler);
                     socket.off("update_conversation_members", updateConversationMembersHandler);
                     socket.off("update_conversation", updateConversationHandler);
+                    socket.off("change_password", changePasswordHandler);
                 }
             };
         }
