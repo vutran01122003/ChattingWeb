@@ -179,10 +179,6 @@ export default function MessageInput({
                     </span>
                 </div>
             )}
-            {/* Thông báo khi bị chặn */}
-            {!canSendMessage && (
-                <div className="mb-2 p-2 bg-red-100 text-red-600 rounded text-sm text-center">{getBlockMessage()}</div>
-            )}
 
             <div className="flex items-center relative">
                 <div
