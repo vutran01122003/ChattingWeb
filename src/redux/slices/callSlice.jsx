@@ -7,6 +7,7 @@ const callSlice = createSlice({
     initialState,
     reducers: {
         callUser(state, action) {
+            localStorage.setItem("callData", JSON.stringify(action.payload));
             return { ...action.payload };
         },
         calling(state, action) {

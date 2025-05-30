@@ -6,6 +6,9 @@ import authReducer from "./slices/authSlice";
 import socketReducer from "./slices/socketSlice";
 import peerReducer from "./slices/peerSlice";
 import callReducer from "./slices/callSlice";
+import friendshipReducer from "./slices/friendSlice";
+import chatReducer from "./slices/chatSlice";
+import aiReducer from "./slices/aiSlice";
 
 const rootReducer = combineReducers({
     count: countReducer,
@@ -13,7 +16,10 @@ const rootReducer = combineReducers({
     auth: authReducer,
     socket: socketReducer,
     peer: peerReducer,
-    call: callReducer
+    call: callReducer,
+    chat: chatReducer,
+    friendship: friendshipReducer,
+    ai: aiReducer
 });
 
 const store = configureStore({

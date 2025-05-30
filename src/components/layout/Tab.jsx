@@ -13,10 +13,10 @@ import { useDispatch, useSelector } from "react-redux";
 import { logout } from "../../redux/slices/authSlice";
 import { authSelector } from "../../redux/selector";
 
-function Tab() {
+function Tab({currentFeatureId, setCurrentFeatureId}) {
     const dispatch = useDispatch();
     const { user } = useSelector(authSelector);
-    const [currentFeatureId, setCurrentFeatureId] = useState(1);
+    // const [currentFeatureId, setCurrentFeatureId] = useState(1);
     const [visibleSettingModal, setVisibleSettingModal] = useState(false);
     const [visibleProfile, setVisibleProfile] = useState(false);
     const features = [
@@ -30,7 +30,7 @@ function Tab() {
             id: 2,
             name: "Danh bạ",
             icon: <RiContactsBook3Line size={30} />,
-            url: "/contacts"
+            url: "/list-friend"
         },
         {
             id: 3,
