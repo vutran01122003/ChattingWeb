@@ -12,6 +12,7 @@ import {
 import { getConversationMessages } from "../redux/thunks/chatThunks";
 
 import { socketSelector } from "../redux/selector";
+import { detectImageService } from "../ai/detectImage";
 
 export default function useChat(conversationId, setMessages) {
     const dispatch = useDispatch();
@@ -47,9 +48,16 @@ export default function useChat(conversationId, setMessages) {
         const formData = new FormData();
         formData.append("conversation_id", conversationId);
 
-        files.forEach((file) => {
-            formData.append("files", file);
-        });
+        let count = 0;
+        for (let i = 0; i < files.length; i++) {
+            const { isValid, reason } = await detectImageService.checkImage(files[i]);
+            if (!isValid) {
+                ++count;
+                alert(reason);
+            } else formData.append("files", files[i]);
+        }
+
+        if (files.length === count) return;
 
         try {
             const result = await dispatch(sendMessageWithFiles(formData));

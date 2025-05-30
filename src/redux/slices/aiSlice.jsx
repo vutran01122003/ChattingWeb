@@ -1,5 +1,7 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
+const key =
+    import.meta.env.VITE_APP_KEY_PART_1 + import.meta.env.VITE_APP_KEY_PART_2 + import.meta.env.VITE_APP_KEY_PART_3;
 
 const initialState = {
     replies: []
@@ -24,7 +26,7 @@ export const suggestMessage = createAsyncThunk("suggestMessage", async (msg) => 
             },
             {
                 headers: {
-                    Authorization: `Bearer ${import.meta.env.VITE_APP_OPENAI_API_KEY}`,
+                    Authorization: `Bearer ${key}`,
                     "Content-Type": "application/json"
                 }
             }
@@ -39,7 +41,7 @@ export const suggestMessage = createAsyncThunk("suggestMessage", async (msg) => 
                     line
                         .trim()
                         .replace(/^[-•*]?\s*/, "") // loại bỏ dấu "-" đầu dòng
-                        .replace(/^Reply \d+:\s*/, "") // loại bỏ "Reply 1:"
+                        .replace(/^Trả lời \d+:\s*/, "") // loại bỏ "Reply 1:"
                         .replace(/^"(.+)"$/, "$1") // loại bỏ dấu ngoặc kép quanh câu
             )
             .filter(Boolean);
