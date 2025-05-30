@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { TbUsersPlus } from "react-icons/tb";
 import { fetchConversations } from "../../redux/thunks/chatThunks";
 import { socketSelector, authSelector } from "../../redux/selector";
-import CreateGroupModal from "../modal/CreategroupModal";
+import CreateGroupModal from "../modal/CreateGroupModal";
 import Account from "../user/Account";
 
 function SideBar({ auth }) {
