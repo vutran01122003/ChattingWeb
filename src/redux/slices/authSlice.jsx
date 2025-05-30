@@ -211,7 +211,7 @@ const authSlice = createSlice({
                 state.user = user;
                 localStorage.setItem("refreshToken", tokens?.refreshToken);
                 localStorage.setItem("accessToken", tokens?.accessToken);
-                localStorage.setItem("clientId", user._id);
+                localStorage.setItem("clientId", user?._id);
             })
             .addCase(editProfile.fulfilled, (state, action) => {
                 state.user = action.payload?.metadata;

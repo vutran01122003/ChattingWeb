@@ -8,6 +8,7 @@ import peerReducer from "./slices/peerSlice";
 import callReducer from "./slices/callSlice";
 import friendshipReducer from "./slices/friendSlice";
 import chatReducer from "./slices/chatSlice";
+import aiReducer from "./slices/aiSlice";
 
 const rootReducer = combineReducers({
     count: countReducer,
@@ -17,7 +18,8 @@ const rootReducer = combineReducers({
     peer: peerReducer,
     call: callReducer,
     chat: chatReducer,
-    friendship: friendshipReducer
+    friendship: friendshipReducer,
+    ai: aiReducer
 });
 
 const store = configureStore({

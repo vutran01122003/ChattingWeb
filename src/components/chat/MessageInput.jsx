@@ -9,9 +9,12 @@ import { BiSolidLike } from "react-icons/bi";
 import EmojiPicker from "./EmojiPicker";
 import FilePopup from "./FilePopup";
 
-import { authSelector } from "../../redux/selector";
+import { aiSelector } from "../../redux/selector";
+import { IoMdClose } from "react-icons/io";
 
 export default function MessageInput({ onSendMessage, onImageUpload, onFileUpload, socket, conversation, user }) {
+    const { replies } = useSelector(aiSelector);
+    const [visibleSuggestionModal, setVisibleSuggestionModal] = useState(false);
     const [message, setMessage] = useState("");
     const [showStickerPopup, setShowStickerPopup] = useState(false);
     const [showFilePopup, setShowFilePopup] = useState(false);
@@ -19,12 +22,21 @@ export default function MessageInput({ onSendMessage, onImageUpload, onFileUploa
     const fileInputRef = useRef(null);
     const imageInputRef = useRef(null);
     const typingTimeoutRef = useRef(null);
+
     useEffect(() => {
         if (textareaRef.current) {
             textareaRef.current.style.height = "auto";
             textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
         }
     }, [message]);
+
+    const hideDisplaySuggestionModal = () => {
+        setVisibleSuggestionModal(false);
+    };
+
+    useEffect(() => {
+        if (replies.length > 0) setVisibleSuggestionModal(true);
+    }, [JSON.stringify(replies)]);
 
     useEffect(() => {
         const handleClickOutside = (event) => {
@@ -92,6 +104,28 @@ export default function MessageInput({ onSendMessage, onImageUpload, onFileUploa
 
     return (
         <div className="border-t border-gray-300 p-2 flex items-center relative">
+            {visibleSuggestionModal && (
+                <div className="absolute -top-12 left-4 flex-10 flex items-center">
+                    <div className="flex gap-2">
+                        {replies.map((reply, index) => (
+                            <span
+                                className="inline-block p-2 bg-gray-200 border-1 border-stone-50 rounded-md cursor-pointer transform active:scale-95 font-semibold"
+                                key={index}
+                                onClick={() => {
+                                    setMessage(reply);
+                                    hideDisplaySuggestionModal();
+                                }}
+                            >
+                                {reply}
+                            </span>
+                        ))}
+                    </div>
+
+                    <span className="cursor-pointer" onClick={hideDisplaySuggestionModal}>
+                        <IoMdClose color="red" size={28} />
+                    </span>
+                </div>
+            )}
             <div
                 className={`flex space-x-2 mr-2 ${
                     !conversation?.allow_send_message &&

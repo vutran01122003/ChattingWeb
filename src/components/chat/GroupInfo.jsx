@@ -160,6 +160,7 @@ const GroupInfo = ({ conversation, authUser }) => {
 
             {visiblePermissionModal && (
                 <PermissionGroupModal
+                    users={conversation.other_user}
                     otherUser={conversation.participants.filter((participant) => participant._id !== authUser._id)}
                     handleTogglePermisionModal={handleTogglePermisionModal}
                     conversation={conversation}

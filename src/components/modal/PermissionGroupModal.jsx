@@ -71,11 +71,11 @@ function PermissionGroupModal({ users, handleTogglePermisionModal, conversation,
             setSelected([]);
         });
     };
-
     useEffect(() => {
-        if (!keyword) setUserList(users.filter((user) => !conversation.sub_admin.includes(user._id)));
-        else setUserList(users.filter((user) => user.full_name.toLowerCase()).includes(keyword.toLowerCase()));
-    }, [keyword, JSON.stringify(conversation.sub_admin)]);
+        if (users)
+            if (!keyword) setUserList(users.filter((user) => !conversation.sub_admin.includes(user._id)));
+            else setUserList(users.filter((user) => user.full_name.toLowerCase()).includes(keyword.toLowerCase()));
+    }, [keyword, JSON.stringify(conversation.sub_admin), JSON.stringify(users)]);
 
     useEffect(() => {
         if (userList) setgroupedContacts(sortByTheFirstLetter(userList));
@@ -88,22 +88,23 @@ function PermissionGroupModal({ users, handleTogglePermisionModal, conversation,
                     <div className="mb-3 w-full max-h-[200px] pr-2 overflow-auto">
                         <h3 className="font-semibold mb-2">Danh sách phó nhóm</h3>
                         <div>
-                            {users && users.map((user) => {
-                                if (conversation.sub_admin.includes(user._id))
-                                    return (
-                                        <div key={user._id} className="flex items-center gap-3 mb-3">
-                                            <Avatar src={user.avatar_url} alt="avatar" size={40} />
-                                            <span className="flex-1 font-semibold">{user.full_name}</span>
-                                            <div
-                                                className="rounded-full bg-stone-600/10 flex items-center justify-center h-6 w-6 hover:bg-stone-600/20"
-                                                onClick={() => handleDeleteSubAdminToConversation(user._id)}
-                                            >
-                                                <FaMinus color="red" />
+                            {users &&
+                                users.map((user) => {
+                                    if (conversation.sub_admin.includes(user._id))
+                                        return (
+                                            <div key={user._id} className="flex items-center gap-3 mb-3">
+                                                <Avatar src={user.avatar_url} alt="avatar" size={40} />
+                                                <span className="flex-1 font-semibold">{user.full_name}</span>
+                                                <div
+                                                    className="rounded-full bg-stone-600/10 flex items-center justify-center h-6 w-6 hover:bg-stone-600/20"
+                                                    onClick={() => handleDeleteSubAdminToConversation(user._id)}
+                                                >
+                                                    <FaMinus color="red" />
+                                                </div>
                                             </div>
-                                        </div>
-                                    );
-                                return null;
-                            })}
+                                        );
+                                    return null;
+                                })}
 
                             {conversation.sub_admin.length === 0 && (
                                 <h3 className="font-semibold text-gray-600 text-center p-1">Trống</h3>
