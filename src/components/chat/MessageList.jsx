@@ -15,7 +15,9 @@ export default function MessageList({
     handleRevokeMessage,
     handleFowardMessage,
     handleAddReaction,
-    handleUnreaction
+    handleUnreaction,  
+    isBlockedUser,
+    isBlocked
 }) {
     const [selectedImagePreview, setSelectedImagePreview] = useState(null);
 
@@ -96,6 +98,16 @@ export default function MessageList({
                         alt="Preview"
                         className="max-w-[90vw] max-h-[90vh] object-contain rounded"
                     />
+                </div>
+            )}
+
+             {/* Hiển thị thông báo khi bị block */}
+             {(isBlocked || isBlockedUser) && (
+                <div className="p-3 bg-yellow-100 border-b border-yellow-200">
+                    <div className="text-center text-sm text-yellow-800">
+                        {isBlocked && "Bạn đã bị chặn bởi người dùng này"}
+                        {isBlockedUser && "Bạn đã chặn người dùng này"}
+                    </div>
                 </div>
             )}
 
