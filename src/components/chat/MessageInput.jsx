@@ -265,7 +265,7 @@ export default function MessageInput({
                     onChange={handleChangeMessage}
                     onKeyDown={handleKeyDown}
                     placeholder={canInteract ? "Type your message..." : "Không thể gửi tin nhắn"}
-                    className={`flex-1 px-4 py-2 rounded-xl border border-gray-300 w-[500px] focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none overflow-hidden ${
+                    className={`flex-1 px-4 py-2 rounded-xl border border-gray-300 w-[400px] focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none overflow-hidden ${
                         !canInteract ? "cursor-not-allowed bg-gray-100" : ""
                     }`}
                     rows={1}
